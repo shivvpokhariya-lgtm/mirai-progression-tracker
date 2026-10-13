@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#020619" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <title>Progression Tracker</title>
+  <style>
+    :root {
+      --ink: #eef6ff;
+      --muted: #92a3bc;
+      --muted-strong: #b8c5d8;
+      --base: #03071b;
+      --base-deep: #010414;
+      --panel: rgba(7, 15, 39, .86);
+      --field: rgba(255,255,255,.035);
+      --line: rgba(143, 177, 222, .18);
+      --line-strong: rgba(139, 189, 235, .35);
+      --blue: #2e62e6;
+      --teal: #08a7b7;
+      --cyan: #46dcea;
+      --danger: #ff9f9f;
+      --shadow: rgba(0, 2, 20, .55);
+      --mx: 50%;
+      --my: 55%;
+      --fd: 'Poppins', sans-serif;
+      --fb: 'Poppins', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      background: var(--base-deep);
+      color: var(--ink);
+      font-family: var(--fb);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .stage {
+      position: relative;
+      min-height: 100svh;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(800px circle at var(--mx) var(--my), rgba(22, 115, 180, .11), transparent 48%),
+        linear-gradient(180deg, var(--base-deep) 0%, var(--base) 70%);
+    }
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -4;
+      opacity: .23;
+      background-image:
+        linear-gradient(rgba(116, 165, 210, .1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(116, 165, 210, .08) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(to bottom, transparent, #000 34%, #000 88%, transparent);
+      transform: perspective(600px) rotateX(63deg) translateY(29%) scale(1.2);
+      transform-origin: center bottom;
+      animation: gridBreathe 12s ease-in-out infinite alternate;
+    }
+    #field {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -3;
+      opacity: .65;
+      pointer-events: none;
+    }
+    .horizon {
+      position: absolute;
+      left: -12%;
+      right: -12%;
+      bottom: -34vh;
+      height: 66vh;
+      z-index: -2;
+      border-radius: 50% 50% 0 0 / 38% 38% 0 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(24, 189, 195, .2) 0%, rgba(26, 103, 212, .16) 26%, rgba(4, 10, 32, .02) 63%),
+        linear-gradient(180deg, rgba(8, 78, 141, .1), transparent 72%);
+      box-shadow: 0 -1px 0 rgba(58, 216, 232, .12), 0 -34px 120px rgba(18, 119, 192, .08);
+      animation: horizonRise 2.4s cubic-bezier(.2,.76,.2,1) both, horizonDrift 11s ease-in-out 2.4s infinite alternate;
+      transform-origin: center bottom;
+    }
+    .beam {
+      position: absolute;
+      z-index: -1;
+      width: 1px;
+      height: 48vh;
+      bottom: 4%;
+      left: var(--x);
+      background: linear-gradient(to top, transparent, rgba(61, 201, 226, .22), transparent);
+      opacity: .35;
+      transform: translateY(65%) skewX(var(--skew));
+      animation: beamLift var(--speed) ease-in-out infinite alternate;
+    }
+    .ambient-label {
+      position: absolute;
+      left: max(24px, calc((100vw - 1280px) / 2));
+      bottom: max(22px, env(safe-area-inset-bottom));
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: rgba(185, 206, 228, .55);
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: gentleAppear .8s ease 2.6s forwards;
+    }
+    .ambient-label::before {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: rgba(64, 211, 224, .6);
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 1280px);
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: max(48px, 8vh) clamp(22px, 5vw, 64px) max(72px, 8vh);
+      display: grid;
+      grid-template-columns: minmax(270px, 1fr) minmax(340px, 420px);
+      align-items: center;
+      gap: clamp(60px, 10vw, 160px);
+    }
+    .brand-lockup {
+      max-width: 520px;
+      opacity: 0;
+      transform: translateY(38px);
+      animation: brandEnter 1.2s cubic-bezier(.2,.75,.2,1) .45s forwards;
+    }
+    .brand-lockup img {
+      display: block;
+      width: min(360px, 75vw);
+      height: auto;
+    }
+    .product-name {
+      margin: 26px 0 0 4px;
+      color: var(--muted-strong);
+      font-family: var(--fd);
+      font-size: clamp(20px, 2.4vw, 28px);
+      font-weight: 700;
+      letter-spacing: .14em;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+    .product-name::after {
+      content: "";
+      display: inline-block;
+      width: 52px;
+      height: 2px;
+      margin: 0 0 5px 16px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+    }
+    .portal-wrap {
+      opacity: 1;
+      transform: translateY(34px);
+      animation: portalEnter .9s cubic-bezier(.2,.75,.2,1) 1.75s forwards;
+    }
+    .portal {
+      position: relative;
+      padding: clamp(26px, 4vw, 38px);
+      background: linear-gradient(145deg, rgba(10, 20, 49, .92), var(--panel));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 28px 90px var(--shadow), inset 0 1px 0 rgba(255,255,255,.04);
+      overflow: hidden;
+    }
+    .portal::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 2px;
+      background: linear-gradient(180deg, transparent 8%, var(--blue) 38%, var(--teal) 76%, transparent 96%);
+    }
+    .portal-head { margin-bottom: 28px; }
+    .portal h1 {
+      margin: 0;
+      font-family: var(--fd);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: clamp(34px, 3.6vw, 44px);
+      letter-spacing: .015em;
+      line-height: 1;
+    }
+    .portal-head p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .role-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 22px;
+      border: 1px solid rgba(142, 173, 213, .12);
+      border-radius: 11px;
+      background: rgba(255,255,255,.025);
+    }
+    .role-switch button {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color .25s ease, background .25s ease, box-shadow .25s ease;
+    }
+    .role-switch button[aria-selected="true"] {
+      color: var(--ink);
+      background: rgba(53, 102, 210, .18);
+      box-shadow: inset 0 0 0 1px rgba(99, 170, 235, .12);
+    }
+    .field { margin-top: 17px; }
+    .field label {
+      display: block;
+      margin: 0 0 8px;
+      color: var(--muted-strong);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .input-shell { position: relative; }
+    .input-shell input {
+      width: 100%;
+      height: 51px;
+      padding: 0 15px;
+      outline: none;
+      border: 1px solid rgba(143, 177, 222, .16);
+      border-radius: 10px;
+      background: var(--field);
+      color: var(--ink);
+      caret-color: var(--cyan);
+      font-size: 14px;
+      transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .input-shell input::placeholder { color: rgba(161, 181, 207, .45); }
+    .input-shell input:focus {
+      border-color: var(--line-strong);
+      background: rgba(255,255,255,.05);
+      box-shadow: 0 0 0 3px rgba(19, 153, 189, .08);
+    }
+    .sign-in {
+      width: 100%;
+      height: 52px;
+      margin-top: 25px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(100deg, #2654c5, #0b8fa8);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(9, 89, 155, .24), inset 0 1px 0 rgba(255,255,255,.18);
+      transition: filter .2s ease, transform .2s ease;
+    }
+    .sign-in:hover { filter: brightness(1.1); }
+    .sign-in:active { transform: translateY(1px); }
+    .sign-in:focus-visible,
+    .role-switch button:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+    .status {
+      min-height: 18px;
+      margin: 14px 2px 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .status.error { color: var(--danger); }
+    .status.ready { color: #7ed9d9; }
+    .footnote {
+      margin: 23px 0 0;
+      padding-top: 18px;
+      border-top: 1px solid rgba(143, 177, 222, .11);
+      color: rgba(162, 182, 207, .64);
+      font-size: 10px;
+      line-height: 1.55;
+      text-align: center;
+    }
+    @keyframes horizonRise {
+      from { transform: translateY(85%) scaleX(.88); opacity: 0; }
+      to { transform: translateY(0) scaleX(1); opacity: 1; }
+    }
+    @keyframes horizonDrift {
+      from { transform: translateY(0) scaleX(1); }
+      to { transform: translateY(-2.5%) scaleX(1.035); }
+    }
+    @keyframes beamLift {
+      from { transform: translateY(54%) skewX(var(--skew)); opacity: .08; }
+      to { transform: translateY(7%) skewX(var(--skew)); opacity: .42; }
+    }
+    @keyframes gridBreathe {
+      from { opacity: .14; transform: perspective(600px) rotateX(63deg) translateY(31%) scale(1.18); }
+      to { opacity: .25; transform: perspective(600px) rotateX(63deg) translateY(27%) scale(1.23); }
+    }
+    @keyframes brandEnter { to { opacity: 1; transform: translateY(0); } }
+    @keyframes portalEnter { to { opacity: 1; transform: translateY(0); } }
+    @keyframes gentleAppear { to { opacity: 1; } }
+    @media (max-width: 780px) {
+      .content {
+        grid-template-columns: 1fr;
+        align-content: center;
+        gap: 44px;
+        padding-top: max(50px, 8vh);
+        padding-bottom: max(78px, 10vh);
+      }
+      .brand-lockup { width: 100%; display: grid; justify-items: center; text-align: center; }
+      .brand-lockup img { width: min(300px, 78vw); }
+      .product-name { margin: 20px 0 0; }
+      .product-name::after { display: none; }
+      .portal-wrap { width: min(100%, 430px); margin: 0 auto; }
+      .ambient-label { display: none; }
+      .horizon { height: 52vh; bottom: -24vh; }
+    }
+    @media (max-width: 420px) {
+      .content { padding-inline: 17px; gap: 35px; }
+      .portal { padding: 24px 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+      #field { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage">
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="horizon" aria-hidden="true"></div>
+    <i class="beam" style="--x: 12%; --skew: -8deg; --speed: 9s" aria-hidden="true"></i>
+    <i class="beam" style="--x: 29%; --skew: 5deg; --speed: 12s" aria-hidden="true"></i>
+    <i class="beam" style="--x: 66%; --skew: -4deg; --speed: 10s" aria-hidden="true"></i>
+    <i class="beam" style="--x: 86%; --skew: 7deg; --speed: 13s" aria-hidden="true"></i>
+    <section class="content" aria-label="Progression Tracker sign in">
+      <div class="brand-lockup">
+        <img src="https://admin.miraisot.com/uploads/Logo_67db14a300.svg" alt="Mirai School of Technology" />
+        <p class="product-name">Progression Tracker</p>
+      </div>
+      <div class="portal-wrap">
+        <form class="portal" id="loginForm" novalidate>
+          <div class="portal-head">
+            <h1>Welcome back.</h1>
+            <p>Sign in to continue to your academic workspace.</p>
+          </div>
+          <div class="role-switch" role="tablist" aria-label="Choose account type">
+            <button type="button" role="tab" aria-selected="true" data-role="Student">Student</button>
+            <button type="button" role="tab" aria-selected="false" data-role="Faculty">Faculty</button>
+            <button type="button" role="tab" aria-selected="false" data-role="Manager">Manager</button>
+          </div>
+          <div class="field" id="facField" style="display:none">
+            <label for="facSelect">Select faculty member</label>
+            <div class="input-shell">
+              <select id="facSelect" style="width:100%;background:transparent;border:0;color:inherit;font:inherit;outline:none">
+                <option value="vishal">Vishal Rathee — DSA, Programming Language, Product Dev</option>
+                <option value="varun">Varun Kumar Sharma — Web Dev, AI & Prompt Engg</option>
+                <option value="gaurav">Gaurav Singh — Maths, IKS</option>
+                <option value="aman">Aman Srivastava — Electrical, Elec Lab</option>
+                <option value="suman">Suman Rajput — Physics Lab</option>
+                <option value="himanshu">Dr. Himanshu Kumar — Physics</option>
+                <option value="zakir">Zakir Husain — Computer Aided Engineering</option>
+                <option value="soniya">Soniya Tyagi — Language Lab</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="identity">College email</label>
+            <div class="input-shell">
+              <input id="identity" name="identity" type="email" autocomplete="email" placeholder="name@college.edu" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-shell">
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" />
+            </div>
+          </div>
+          <button class="sign-in" type="submit">Continue as Student</button>
+          <p class="status" id="loginStatus" aria-live="polite"></p>
+          <p class="footnote">Demo build — any email and password will sign you in.</p>
+        </form>
+      </div>
+    </section>
+    <div class="ambient-label" aria-hidden="true">Mirai academic systems / 01</div>
+  </main>
+  <script>
+    (function () {
+      var stage = document.getElementById('stage');
+      var form = document.getElementById('loginForm');
+      var status = document.getElementById('loginStatus');
+      var submit = form.querySelector('.sign-in');
+      var roleButtons = form.querySelectorAll('[data-role]');
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      roleButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          roleButtons.forEach(function (item) {
+            item.setAttribute('aria-selected', item === button ? 'true' : 'false');
+          });
+          submit.textContent = 'Continue as ' + button.getAttribute('data-role');
+          var isFac = button.getAttribute('data-role') === 'Faculty';
+          document.getElementById('facField').style.display = isFac ? 'block' : 'none';
+          status.textContent = '';
+          status.className = 'status';
+        });
+      });
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var identity = document.getElementById('identity');
+        var password = document.getElementById('password');
+        if (!identity.value || !password.value) {
+          status.textContent = 'Enter your college email and password to continue.';
+          status.className = 'status error';
+          (!identity.value ? identity : password).focus();
+          return;
+        }
+        var active = form.querySelector('[data-role][aria-selected="true"]');
+        var role = active ? active.getAttribute('data-role').toLowerCase() : 'student';
+        var url = (role === 'manager') ? 'manager.html?role=manager' : 'dashboard.html?role=' + role;
+        if (role === 'faculty') {
+          var fac = document.getElementById('facSelect').value;
+          url += '&fac=' + fac;
+        }
+        status.textContent = 'Signing you in\u2026';
+        status.className = 'status ready';
+        /* fresh login = fresh portal open: replay the full intro (student or faculty) */
+        try{ sessionStorage.removeItem('mirai_intro_seen'); }catch(e){}
+        setTimeout(function(){ window.location.href = url; }, 500);
+      });
+      function pointerMove(event) {
+        var x = (event.clientX / window.innerWidth) * 100;
+        var y = (event.clientY / window.innerHeight) * 100;
+        stage.style.setProperty('--mx', x.toFixed(1) + '%');
+        stage.style.setProperty('--my', y.toFixed(1) + '%');
+      }
+      if (!reduceMotion) window.addEventListener('pointermove', pointerMove, { passive: true });
+      var canvas = document.getElementById('field');
+      var ctx = canvas.getContext('2d');
+      var points = [];
+      var width = 0;
+      var height = 0;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var pointer = { x: -1000, y: -1000 };
+      function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        var count = Math.max(20, Math.min(48, Math.floor(width / 28)));
+        points = [];
+        for (var i = 0; i < count; i++) {
+          points.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            r: Math.random() * 1.25 + .35,
+            vx: (Math.random() - .5) * .07,
+            vy: -(Math.random() * .08 + .025),
+            a: Math.random() * .35 + .12
+          });
+        }
+      }
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+        for (var i = 0; i < points.length; i++) {
+          var p = points[i];
+          var dx = p.x - pointer.x;
+          var dy = p.y - pointer.y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 125 && dist > 0) {
+            p.x += (dx / dist) * .28;
+            p.y += (dy / dist) * .28;
+          }
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y < -8) p.y = height + 8;
+          if (p.x < -8) p.x = width + 8;
+          if (p.x > width + 8) p.x = -8;
+          ctx.beginPath();
+          ctx.fillStyle = 'rgba(93, 215, 229,' + p.a + ')';
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+      if (!reduceMotion && ctx) {
+        window.addEventListener('pointermove', function (event) {
+          pointer.x = event.clientX;
+          pointer.y = event.clientY;
+        }, { passive: true });
+        window.addEventListener('pointerleave', function () {
+          pointer.x = -1000;
+          pointer.y = -1000;
+        });
+        window.addEventListener('resize', resize, { passive: true });
+        resize();
+        draw();
+      }
+    })();
+  </script>
+</body>
+</html>
