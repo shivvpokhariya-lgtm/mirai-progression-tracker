@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#020619" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="students.js"></script>
+  <script src="campus.js"></script>
+  <title>Faculty · Progression Tracker</title>
+  <style>
+    :root{
+      --base-deep:#010414; --base:#03071b;
+      --ink:#eef6ff; --muted:#92a3bc; --muted-strong:#b8c5d8;
+      --panel:rgba(9,17,40,.78); --field:rgba(255,255,255,.035);
+      --line:rgba(143,177,222,.16); --line-strong:rgba(139,189,235,.35);
+      --blue:#2e62e6; --teal:#08a7b7; --cyan:#46dcea;
+      --ok:#3ddc97; --warn:#f5b544; --bad:#ff7a7a;
+      --fd:'Poppins',sans-serif; --fb:'Poppins',sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0; padding:0}
+    body{background:var(--base-deep); color:var(--ink); font-family:var(--fb);
+      -webkit-font-smoothing:antialiased; min-height:100vh}
+    .topbar{position:sticky; top:0; z-index:20; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      background:rgba(1,4,20,.72); border-bottom:1px solid var(--line);}
+    .topbar-in{padding:14px clamp(20px,4vw,72px); display:flex; align-items:center; gap:28px;}
+    .brand{display:flex; align-items:center; gap:14px; text-decoration:none; color:var(--ink)}
+    .brand small{font-weight:800; font-size:10px; letter-spacing:.24em; color:var(--muted); text-transform:uppercase}
+    .mainnav{display:flex; gap:4px; margin-left:8px}
+    .mainnav a{color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.08em;
+      text-transform:uppercase; padding:8px 14px; border-radius:8px}
+    .mainnav a:hover{color:var(--ink); background:rgba(255,255,255,.04)}
+    .mainnav a.active{color:var(--ink); background:rgba(53,102,210,.16)}
+    .top-right{margin-left:auto; display:flex; align-items:center; gap:12px}
+    .rolechip{font-weight:800; font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--cyan); border:1px solid rgba(70,220,234,.3); background:rgba(70,220,234,.07);
+      padding:6px 12px; border-radius:999px}
+    .avatar{width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+      background:linear-gradient(135deg,#2654c5,#0b8fa8); font-weight:800; font-size:13px}
+    .logout{color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase}
+    .wrap{max-width:1060px; margin:0 auto; padding:60px clamp(20px,4vw,72px) 90px}
+    .eyebrow{font-weight:800; font-size:10px; letter-spacing:.24em; color:var(--muted);
+      text-transform:uppercase; margin-bottom:16px}
+    .pagehead{margin-bottom:32px}
+    .pagehead h1{font-family:var(--fd); font-weight:700; text-transform:uppercase;
+      font-size:clamp(46px,6vw,88px); line-height:1; margin:0 0 12px; letter-spacing:.01em}
+    .sub{color:var(--muted); font-size:15px; margin:0; max-width:640px; line-height:1.6}
+    .fgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px}
+    .fcard{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:26px;
+      cursor:pointer; transition:transform .2s, border-color .2s}
+    .fcard:hover{transform:translateY(-4px); border-color:var(--line-strong)}
+    .fava{width:64px; height:64px; border-radius:50%; display:grid; place-items:center;
+      background:linear-gradient(135deg,#2654c5,#0b8fa8); font-weight:800; font-size:22px; margin-bottom:16px}
+    .fname{font-weight:700; font-size:18px; margin:0 0 4px}
+    .ftitle{font-size:12px; color:var(--teal); font-weight:600; letter-spacing:.04em; margin-bottom:12px}
+    .fsubs{display:flex; flex-wrap:wrap; gap:6px}
+    .fsub{font-size:11px; font-weight:600; padding:5px 11px; border-radius:99px;
+      border:1px solid var(--line); color:var(--muted-strong)}
+    .mback{position:fixed; inset:0; z-index:50; background:rgba(1,4,20,.7); backdrop-filter:blur(8px);
+      display:none; align-items:center; justify-content:center; padding:20px}
+    .mback.open{display:flex}
+    .modal{background:#060b22; border:1px solid var(--line-strong); border-radius:20px;
+      max-width:560px; width:100%; max-height:88vh; overflow:auto; padding:34px}
+    .modal h3{margin:0 0 4px; font-size:22px}
+    .msub{color:var(--muted); font-size:13px; margin:0 0 20px}
+    .prow{display:flex; justify-content:space-between; font-size:13.5px; padding:9px 0;
+      border-bottom:1px solid rgba(255,255,255,.06)}
+    .prow:last-child{border:0}
+    .prow .k{color:var(--muted)}
+    .mbtns{display:flex; justify-content:flex-end; gap:10px; margin-top:22px}
+    .btn{border:1px solid var(--line); background:transparent; color:var(--ink);
+      font:600 13px Poppins; padding:11px 22px; border-radius:12px; cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,#2654c5,#0b8fa8); border:0}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="topbar-in">
+    <a class="brand" id="brandHome" href="dashboard.html"><small>Mirai · Progression Tracker</small></a>
+    <nav class="mainnav">
+      <a id="navDash" href="dashboard.html">Dashboard</a>
+      <a id="navSubjects" href="subjects.html">Subjects</a>
+      <a id="navExams" href="exams.html">Exam readiness</a>
+      <a href="faculty.html" class="active">Faculty</a>
+      <a id="navStudents" href="students.html">Students</a>
+      <a id="navCalendar" href="calendar.html">Calendar</a>
+    </nav>
+    <div class="top-right">
+      <span class="rolechip" id="roleChip">Student</span>
+      <span class="avatar" id="avatarInit">S</span>
+      <a class="logout" href="index.html">Log out</a>
+    </div>
+  </div></header>
+  <div class="wrap">
+    <div class="eyebrow">Our mentors</div>
+    <div class="pagehead">
+      <h1>Faculty</h1>
+      <p class="sub">The teachers behind every subject — their courses, schedule and progress at a glance.</p>
+    </div>
+    <div class="fgrid" id="facGrid"></div>
+  </div>
+  <div class="mback" id="facModal"><div class="modal">
+    <div style="display:flex;gap:18px;align-items:center;margin-bottom:20px">
+      <div class="fava" id="pmAva" style="margin:0"></div>
+      <div><h3 id="pmName" style="margin:0"></h3><p class="msub" id="pmTitle" style="margin:4px 0 0"></p></div>
+    </div>
+    <div id="pmBody"></div>
+    <div class="mbtns"><button class="btn" data-close>Close</button></div>
+  </div></div>
+<script>
+  var FACULTY = [
+    {id:'vishal', name:'Vishal Rathee', title:'Professor · Computer Science', subjects:['dsa','pps','pd'], email:'vishal.rathee@mirai.edu'},
+    {id:'varun', name:'Varun Kumar Sharma', title:'Professor · Computer Science', subjects:['web','prompt'], email:'varun.sharma@mirai.edu'},
+    {id:'gaurav', name:'Gaurav Singh', title:'Professor · Mathematics', subjects:['maths1','iks'], email:'gaurav.singh@mirai.edu'},
+    {id:'aman', name:'Aman Srivastava', title:'Professor · Electrical Engineering', subjects:['bee','beelab'], email:'aman.srivastava@mirai.edu'},
+    {id:'suman', name:'Suman Rajput', title:'Professor · Physics', subjects:['phylab'], email:'suman.rajput@mirai.edu'},
+    {id:'himanshu', name:'Dr. Himanshu Kumar', title:'Professor · Physics', subjects:['phy'], email:'himanshu.kumar@mirai.edu'},
+    {id:'zakir', name:'Zakir Husain', title:'Professor · CAD / Mechanical', subjects:['egd'], email:'zakir.husain@mirai.edu'},
+    {id:'soniya', name:'Soniya Tyagi', title:'Professor · Language', subjects:['langlab'], email:''}
+  ];
+  var SUBJECT_NAMES = {dsa:'Data Structures & Algorithms', pps:'Programming Languages', web:'Web Development', prompt:'AI & Prompt Engineering', maths1:'Calculus and Linear Algebra', iks:'Indian Knowledge System', bee:'Fundamentals of Electrical Engineering', phylab:'Physics Laboratory', phy:'Quantum Physics and Applications', egd:'Computer Aided Engineering Drawing Lab', langlab:'Language Lab', beelab:'Electrical Engineering Lab', pd:'Product Development'};
+  (function(){
+    var q = location.search;
+    var role = (new URLSearchParams(q).get('role')||'student').toLowerCase();
+    var isFaculty = role==='faculty';
+    var isMgr = role==='manager';
+    document.getElementById('roleChip').textContent = isMgr?'Campus Controller':(isFaculty?'Faculty':'Student');
+    document.getElementById('avatarInit').textContent = isMgr?'C':(isFaculty?'F':'S');
+    ['navDash','navSubjects','navExams','navCalendar'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.href = el.getAttribute('href').split('?')[0] + q;
+    });
+    var navSt=document.getElementById('navStudents');
+    if(navSt){ navSt.href='students.html'+q; if(!isFaculty && !isMgr) navSt.style.display='none'; }
+    document.getElementById('brandHome').href='dashboard.html'+q;
+    function initials(n){ return n.split(' ').map(function(w){return w[0];}).filter(function(c){return /[A-Z]/.test(c);}).slice(0,2).join('')||n[0]; }
+    var grid=document.getElementById('facGrid');
+    grid.innerHTML=FACULTY.map(function(f){
+      var subs=f.subjects.map(function(s){return '<span class="fsub">'+(SUBJECT_NAMES[s]||s)+'</span>';}).join('');
+      return '<div class="fcard" data-id="'+f.id+'"><div class="fava">'+initials(f.name)+'</div>'+
+        '<p class="fname">'+f.name+'</p><p class="ftitle">'+f.title+'</p><div class="fsubs">'+subs+'</div></div>';
+    }).join('');
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function getSetup(){ try{ if(window.MiraiSetup&&MiraiSetup.state) return MiraiSetup.state; if(window.CampusDB){ var s=CampusDB.get(CampusDB.current()); if(s) return s; } return JSON.parse(localStorage.getItem('mirai_setup_v1')||'null'); }catch(e){ return null; } }
+    function getFb(){ try{ return JSON.parse(localStorage.getItem('mirai_feedback_v1')||'[]'); }catch(e){ return []; } }
+    function $id(id){ return document.getElementById(id); }
+    var meFacId = new URLSearchParams(q).get('fac')||'';
+    function homeworkFor(f){
+      var S=getSetup(); if(!S||!S.logs) return [];
+      return S.logs.filter(function(l){
+        var mine = l.fac ? (l.fac===f.id) : (f.subjects.indexOf(l.sub)>=0);
+        return mine && (l.hw==='Assigned' || (l.hwd&&l.hwd.trim()));
+      }).sort(function(a,b){ return (b.date||'').localeCompare(a.date||'')||((b.ts||0)-(a.ts||0)); }).slice(0,8);
+    }
+    function commentsFor(f){
+      return getFb().filter(function(x){ return x.facId===f.id; })
+        .sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).slice(0,12);
+    }
+    function openProfile(f){
+      $id('pmAva').textContent=initials(f.name);
+      $id('pmName').textContent=f.name;
+      $id('pmTitle').textContent=f.title;
+      var html='<div class="prow"><span class="k">Email</span><span>'+esc(f.email)+'</span></div>';
+      html+=f.subjects.map(function(s){
+        return '<div class="prow"><span class="k">Subject</span><span>'+esc(SUBJECT_NAMES[s]||s)+'</span></div>';
+      }).join('');
+      var hw=homeworkFor(f);
+      html+='<div class="eyebrow" style="margin:22px 0 8px">Homework given</div>';
+      html+= hw.map(function(l){
+        var subj=SUBJECT_NAMES[l.sub]||l.sub;
+        var detail=l.hwd?esc(l.hwd):'Marked as assigned';
+        var topic=l.tlabel?(' \u00b7 '+esc(l.tlabel)):'';
+        return '<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px">'+
+          '<div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px">'+esc(subj)+topic+' \u00b7 '+esc(l.date||'')+'</div>'+
+          '<div style="font-size:13px;color:var(--muted-strong);line-height:1.5">'+detail+'</div></div>';
+      }).join('') || '<p class="msub" style="margin:0 0 4px">No homework logged yet.</p>';
+      var cm=commentsFor(f);
+      html+='<div class="eyebrow" style="margin:22px 0 8px">Comments on students\u2019 work</div>';
+      html+= cm.map(function(c){
+        var subj=SUBJECT_NAMES[c.sub]||c.sub;
+        return '<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px">'+
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+          '<b style="font-size:13px">'+esc(c.student)+'</b>'+
+          '<span style="font-size:11px;color:var(--muted)">'+esc(c.date||'')+'</span></div>'+
+          '<div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px">'+esc(subj)+'</div>'+
+          '<div style="font-size:13px;color:var(--muted-strong);line-height:1.5">'+esc(c.text)+'</div></div>';
+      }).join('') || '<p class="msub" style="margin:0 0 4px">No comments yet.</p>';
+      if(meFacId===f.id){
+        var S=getSetup(), sts=(S&&S.students)||[];
+        if(!sts.length||typeof sts[0]==='string'||sts.length<100){
+          sts=((typeof REAL_STUDENTS!=='undefined')?REAL_STUDENTS.slice():[]);
+          if(S){ S.students=sts; try{ localStorage.setItem('mirai_setup_v1', JSON.stringify(S)); }catch(e){} }
+        }
+        html+='<div class="eyebrow" style="margin:22px 0 8px">Add a comment</div>';
+        html+='<div class="frow"><label>Student</label><select id="pfStudent">'+sts.map(function(st){
+          var nm=(st&&typeof st==='object')?st.n:String(st), sc=(st&&typeof st==='object')?(st.s||''):'';
+          return '<option value="'+esc(nm)+'">'+esc(nm)+(sc?(' — Sec '+esc(sc)):'')+'</option>';
+        }).join('')+'</select></div>';
+        html+='<div class="frow"><label>Subject</label><select id="pfSubject">'+f.subjects.map(function(s){ return '<option value="'+s+'">'+esc(SUBJECT_NAMES[s]||s)+'</option>'; }).join('')+'</select></div>';
+        html+='<div class="frow"><label>Comment</label><textarea id="pfText" rows="3" placeholder="Write feedback on this student\u2019s work\u2026"></textarea></div>';
+        html+='<div class="mbtns" style="justify-content:flex-start"><button class="btn primary" id="pfSave">Save comment</button></div>';
+      }
+      $id('pmBody').innerHTML=html;
+      var ps=$id('pfSave');
+      if(ps) ps.addEventListener('click', function(){
+        var st=$id('pfStudent').value, tx=$id('pfText').value.trim();
+        if(!st||!tx){ alert('Pick a student and write a comment.'); return; }
+        var all=getFb();
+        all.push({id:'fb'+Date.now(), facId:f.id, facName:f.name, student:st,
+          sub:$id('pfSubject').value, text:tx,
+          date:new Date().toISOString().slice(0,10), ts:Date.now()});
+        try{ localStorage.setItem('mirai_feedback_v1', JSON.stringify(all)); }catch(e){}
+        openProfile(f);
+      });
+      $id('facModal').classList.add('open');
+    }
+    grid.querySelectorAll('.fcard').forEach(function(card){
+      card.addEventListener('click', function(){
+        var f=FACULTY.filter(function(x){return x.id===card.dataset.id;})[0];
+        if(f) openProfile(f);
+      });
+    });
+    document.querySelectorAll('#facModal [data-close]').forEach(function(b){
+      b.addEventListener('click', function(){ document.getElementById('facModal').classList.remove('open'); });
+    });
+    document.getElementById('facModal').addEventListener('click', function(e){
+      if(e.target===this) this.classList.remove('open');
+    });
+  })();
+</script>
+</body>
+</html>

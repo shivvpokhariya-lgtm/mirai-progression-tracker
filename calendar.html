@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#020619" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="students.js"></script>
+  <script src="campus.js"></script>
+  <title>Calendar · Progression Tracker</title>
+  <style>
+    :root{--bg:#010313; --panel:#0a1230; --line:rgba(120,140,220,.16); --line-strong:rgba(120,140,220,.32);
+      --ink:#eef2ff; --muted:#8b96c2; --muted-strong:#aab6dd;
+      --hol:#ff7a7a; --ev:#6ea8ff; --ex:#2dd4bf; --ok:#3ddc97; --warn:#f5b544}
+    *{box-sizing:border-box}
+    body{margin:0; background:var(--bg); color:var(--ink); font-family:Poppins,system-ui,sans-serif; min-height:100vh}
+    .topbar{position:sticky; top:0; z-index:50; background:rgba(1,3,19,.82); backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
+    .topbar-in{max-width:1180px; margin:0 auto; padding:14px 22px; display:flex; align-items:center; gap:26px}
+    .brand{color:var(--ink); text-decoration:none; font-weight:800; font-size:15px; white-space:nowrap}
+    .brand small{display:block; font-size:10px; font-weight:600; letter-spacing:.18em; color:var(--muted)}
+    .mainnav{display:flex; gap:4px; flex:1; flex-wrap:wrap}
+    .mainnav a{color:var(--muted); text-decoration:none; font-size:13px; font-weight:600; padding:8px 14px; border-radius:99px}
+    .mainnav a:hover{color:var(--ink); background:rgba(120,140,220,.1)}
+    .mainnav a.active{color:var(--ink); background:rgba(53,102,210,.18); border:1px solid var(--line-strong)}
+    .top-right{display:flex; align-items:center; gap:12px}
+    .rolechip{font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--muted-strong); border:1px solid var(--line); padding:6px 12px; border-radius:99px}
+    .logout{color:var(--muted); font-size:12.5px; text-decoration:none}
+    .wrap{max-width:1180px; margin:0 auto; padding:34px 22px 90px}
+    .pagehead{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:22px; flex-wrap:wrap}
+    h1{margin:0; font-size:34px; font-weight:800; letter-spacing:-.02em}
+    .sub{color:var(--muted); font-size:13.5px; margin:6px 0 0}
+    .calnav{display:flex; align-items:center; gap:10px}
+    .cbtn{border:1px solid var(--line-strong); background:transparent; color:var(--ink); font:700 13px Poppins;
+      padding:10px 18px; border-radius:999px; cursor:pointer}
+    .cbtn:hover{border-color:var(--ex); color:var(--ex)}
+    .cbtn.primary{background:linear-gradient(135deg,#2654c5,#0b8fa8); border:0}
+    #monLabel{font-weight:800; font-size:17px; min-width:190px; text-align:center}
+    .cal{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:18px; overflow:hidden}
+    .dow{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:8px}
+    .dow span{text-align:center; font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--muted)}
+    .grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+    .day{min-height:96px; border:1px solid var(--line); border-radius:12px; padding:8px; font-size:12.5px; position:relative; background:rgba(255,255,255,.012)}
+    .day.dim{opacity:.32}
+    .day.today{border-color:var(--ex)}
+    .day.today .dn{background:var(--ex); color:#02110d}
+    .dn{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%; font-weight:700; margin-bottom:6px}
+    .mk{display:block; font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:99px; margin:3px 0;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:default}
+    .mk.hol{background:rgba(255,122,122,.13); color:var(--hol); border:1px solid rgba(255,122,122,.3)}
+    .mk.ev{background:rgba(110,168,255,.12); color:var(--ev); border:1px solid rgba(110,168,255,.3)}
+    .mk.ex{background:rgba(45,212,191,.12); color:var(--ex); border:1px solid rgba(45,212,191,.35); font-weight:700}
+    .legend{display:flex; gap:18px; margin:16px 2px 30px; flex-wrap:wrap}
+    .legend span{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:7px}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .panel{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:24px; margin-bottom:22px}
+    .panel h3{margin:0 0 4px; font-size:18px}
+    .psub{color:var(--muted); font-size:12.5px; margin:0 0 16px}
+    .uprow{display:flex; align-items:center; gap:14px; padding:13px 4px; border-bottom:1px solid var(--line)}
+    .uprow:last-child{border-bottom:0}
+    .udate{flex:none; width:52px; text-align:center; background:rgba(120,140,220,.08); border:1px solid var(--line);
+      border-radius:12px; padding:8px 4px}
+    .udate b{display:block; font-size:18px}
+    .udate span{font-size:10px; color:var(--muted); letter-spacing:.08em}
+    .uinfo{flex:1; min-width:0}
+    .uinfo .t{font-weight:700; font-size:14px}
+    .uinfo .k{font-size:11px; font-weight:800; letter-spacing:.1em; margin-right:8px}
+    .k.hol{color:var(--hol)} .k.ev{color:var(--ev)} .k.ex{color:var(--ex)}
+    .gbtn{flex:none; border:1px solid var(--line-strong); background:transparent; color:var(--ink);
+      font:700 12px Poppins; padding:9px 16px; border-radius:99px; cursor:pointer; text-decoration:none; display:inline-block}
+    .gbtn:hover{border-color:var(--ex); color:var(--ex)}
+    .syncbox{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .note{font-size:12px; color:var(--muted); margin:12px 0 0; line-height:1.6}
+    @media(max-width:720px){ .day{min-height:64px} .mk{font-size:9px} .mainnav{display:none} }
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="topbar-in">
+    <a class="brand" id="brandHome" href="dashboard.html"><small>Mirai · Progression Tracker</small></a>
+    <nav class="mainnav">
+      <a id="navDash" href="dashboard.html">Dashboard</a>
+      <a id="navSubjects" href="subjects.html">Subjects</a>
+      <a id="navExams" href="exams.html">Exam readiness</a>
+      <a id="navFaculty" href="faculty.html">Faculty</a>
+      <a id="navStudents" href="students.html">Students</a>
+      <a href="calendar.html" class="active">Calendar</a>
+    </nav>
+    <div class="top-right">
+      <span class="rolechip" id="roleChip">Student</span>
+      <a class="logout" href="index.html">Log out</a>
+    </div>
+  </div></header>
+  <div class="wrap">
+    <div class="pagehead">
+      <div><h1>Calendar</h1>
+      <p class="sub" id="calSub">Holidays, campus events and exams — one view.</p></div>
+      <div class="calnav">
+        <button class="cbtn" id="prevM">‹</button>
+        <span id="monLabel"></span>
+        <button class="cbtn" id="nextM">›</button>
+        <button class="cbtn" id="todayB">Today</button>
+      </div>
+    </div>
+    <div class="cal">
+      <div class="dow"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div>
+      <div class="grid" id="calGrid"></div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--hol)"></i>Holiday</span>
+      <span><i class="dot" style="background:var(--ev)"></i>Campus event</span>
+      <span><i class="dot" style="background:var(--ex)"></i>Exam</span>
+    </div>
+    <div class="panel">
+      <h3>Upcoming</h3>
+      <p class="psub">Next 60 days — add any of these straight to your Google Calendar.</p>
+      <div id="upList"></div>
+    </div>
+    <div class="panel">
+      <h3>Google Calendar sync</h3>
+      <p class="psub">Push holidays and exams to Google Calendar.</p>
+      <div class="syncbox">
+        <button class="cbtn primary" id="icsAll">Download all (.ics)</button>
+        <button class="cbtn" id="gcalHol">Add all holidays to Google Calendar</button>
+      </div>
+      <p class="note">“Add to Google Calendar” opens Google Calendar with the event pre-filled — one click to save. The .ics file imports everything (holidays, events, exams) into Google Calendar, Outlook or Apple Calendar in one go. Full automatic two-way sync arrives with the Supabase backend.</p>
+    </div>
+  </div>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  /* role + nav */
+  var q=location.search||'';
+  var qp=new URLSearchParams(q);
+  var role=(qp.get('role')||'student').toLowerCase();
+  var isFaculty=role==='faculty', isMgr=role==='manager';
+  $('roleChip').textContent=isMgr?'Campus Controller':(isFaculty?'Faculty':'Student');
+  ['navDash','navSubjects','navExams','navFaculty','navStudents'].forEach(function(id){
+    var el=$(id); if(el) el.href=el.getAttribute('href').split('?')[0]+q;
+  });
+  var bh=$('brandHome'); if(bh) bh.href=(isMgr?'manager.html':'dashboard.html')+q;
+  if(!isFaculty&&!isMgr){ var ns=$('navStudents'); if(ns) ns.style.display='none'; }
+  /* campus setup */
+  function getSetup(){
+    try{
+      if(window.MiraiSetup&&MiraiSetup.state) return MiraiSetup.state;
+      if(window.CampusDB){ var s=CampusDB.get(CampusDB.current()); if(s) return s; }
+      return JSON.parse(localStorage.getItem('mirai_setup_v1')||'null');
+    }catch(e){ return null; }
+  }
+  var S=getSetup();
+  var campusName='';
+  try{ campusName=campusById(CampusDB.current()).name; }catch(e){}
+  if(S&&S.sem){
+    $('calSub').textContent=(campusName?campusName+' · ':'')+S.sem.name+' — holidays, campus events and exams in one view.';
+  }
+  var holidays=(S&&S.sem&&S.sem.holidays)||[];
+  var events=(S&&S.sem&&S.sem.events)||[];
+  var exams=(S&&S.exams)||[];
+  var semStart=S&&S.sem&&S.sem.start, semEnd=S&&S.sem&&S.sem.end;
+  function itemsOn(d){
+    var out=[];
+    if(holidays.indexOf(d)>=0) out.push({k:'hol',t:'Holiday'});
+    events.forEach(function(e){ if(e.d===d) out.push({k:'ev',t:e.label}); });
+    exams.forEach(function(x){ if(x.date===d) out.push({k:'ex',t:x.name}); });
+    return out;
+  }
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var cur=new Date(); cur=new Date(cur.getFullYear(),cur.getMonth(),1);
+  function p2(n){ return (n<10?'0':'')+n; }
+  function dstr(y,m,d){ return y+'-'+p2(m+1)+'-'+p2(d); }
+  function render(){
+    var y=cur.getFullYear(), m=cur.getMonth();
+    $('monLabel').textContent=MONTHS[m]+' '+y;
+    var first=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate();
+    var today=new Date(); var ty=today.getFullYear(), tm=today.getMonth(), td=today.getDate();
+    var html='';
+    for(var i=0;i<first;i++) html+='<div class="day dim"></div>';
+    for(var d=1;d<=dim;d++){
+      var ds=dstr(y,m,d);
+      var its=itemsOn(ds);
+      var cls='day'+((y===ty&&m===tm&&d===td)?' today':'');
+      html+='<div class="'+cls+'"><span class="dn">'+d+'</span>';
+      its.slice(0,3).forEach(function(it){
+        html+='<span class="mk '+it.k+'" title="'+esc(it.t)+'">'+esc(it.t)+'</span>';
+      });
+      if(its.length>3) html+='<span class="mk" style="color:var(--muted)">+'+(its.length-3)+' more</span>';
+      html+='</div>';
+    }
+    $('calGrid').innerHTML=html;
+  }
+  $('prevM').addEventListener('click',function(){ cur=new Date(cur.getFullYear(),cur.getMonth()-1,1); render(); });
+  $('nextM').addEventListener('click',function(){ cur=new Date(cur.getFullYear(),cur.getMonth()+1,1); render(); });
+  $('todayB').addEventListener('click',function(){ var t=new Date(); cur=new Date(t.getFullYear(),t.getMonth(),1); render(); });
+  /* upcoming */
+  function gcalURL(title,date,details){
+    var d0=date.replace(/-/g,''), dd=new Date(date+'T00:00:00Z');
+    var d1=new Date(dd.getTime()+86400000).toISOString().slice(0,10).replace(/-/g,'');
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)
+      +'&dates='+d0+'/'+d1+'&details='+encodeURIComponent(details||'');
+  }
+  function renderUp(){
+    var t=new Date(); t.setHours(0,0,0,0);
+    var items=[];
+    holidays.forEach(function(d){ items.push({d:d,k:'hol',t:'Holiday'}); });
+    events.forEach(function(e){ if(e.d) items.push({d:e.d,k:'ev',t:e.label}); });
+    exams.forEach(function(x){ if(x.date) items.push({d:x.date,k:'ex',t:x.name}); });
+    var lim=new Date(t.getTime()+60*86400000);
+    items=items.filter(function(it){ var d=new Date(it.d+'T00:00:00'); return d>=t&&d<=lim; })
+      .sort(function(a,b){ return a.d<b.d?-1:1; });
+    var kl={hol:'HOLIDAY',ev:'EVENT',ex:'EXAM'};
+    $('upList').innerHTML=items.map(function(it){
+      var p=it.d.split('-');
+      var mon=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][+p[1]-1];
+      return '<div class="uprow"><div class="udate"><b>'+(+p[2])+'</b><span>'+mon+'</span></div>'+
+        '<div class="uinfo"><span class="k '+it.k+'">'+kl[it.k]+'</span><span class="t">'+esc(it.t)+'</span></div>'+
+        '<a class="gbtn" target="_blank" rel="noopener" href="'+gcalURL(it.t+' — Mirai',it.d,(campusName?campusName+' campus. ':'')+'From the Progression Tracker calendar.')+'">Add to Google Calendar</a></div>';
+    }).join('')||'<p class="psub" style="margin:0">Nothing in the next 60 days.</p>';
+  }
+  /* .ics download */
+  function icsDate(d){ return d.replace(/-/g,''); }
+  function icsEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+  $('icsAll').addEventListener('click',function(){
+    var lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mirai//Progression Tracker//EN','CALSCALE:GREGORIAN'];
+    function addEv(d,title,desc){
+      var uid=title.replace(/\W/g,'')+d+'@mirai-tracker';
+      lines.push('BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+icsDate(new Date().toISOString().slice(0,10))+'T000000Z',
+        'DTSTART;VALUE=DATE:'+icsDate(d),'SUMMARY:'+icsEsc(title),'DESCRIPTION:'+icsEsc(desc||''),'END:VEVENT');
+    }
+    holidays.forEach(function(d){ addEv(d,'Holiday — Mirai','Holiday as per '+(campusName||'campus')+' semester plan.'); });
+    events.forEach(function(e){ if(e.d) addEv(e.d,e.label,'Campus event — Mirai Progression Tracker.'); });
+    exams.forEach(function(x){ if(x.date) addEv(x.date,x.name,' · '+(campusName||''),'Exam — Mirai Progression Tracker.'); });
+    lines.push('END:VCALENDAR');
+    var blob=new Blob([lines.join('\r\n')],{type:'text/calendar'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='mirai-calendar.ics';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
+  });
+  /* add all holidays to Google Calendar (opens one by one) */
+  $('gcalHol').addEventListener('click',function(){
+    var t=new Date(); t.setHours(0,0,0,0);
+    var upcoming=holidays.filter(function(d){ return new Date(d+'T00:00:00')>=t; });
+    if(!upcoming.length){ alert('No upcoming holidays.'); return; }
+    if(!confirm('Open '+upcoming.length+' Google Calendar tabs (one per holiday)?')) return;
+    upcoming.forEach(function(d,i){
+      setTimeout(function(){ window.open(gcalURL('Holiday — Mirai',d,'Holiday as per '+(campusName||'campus')+' semester plan.'),'_blank'); },i*600);
+    });
+  });
+  render(); renderUp();
+})();
+</script>
+</body>
+</html>

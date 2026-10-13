@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#020619" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <title>Exams · Progression Tracker</title>
+  <script src="campus.js"></script>
+  <style>
+    :root{
+      --base-deep:#010414; --base:#03071b;
+      --ink:#eef6ff; --muted:#92a3bc; --muted-strong:#b8c5d8;
+      --panel:rgba(9,17,40,.78); --field:rgba(255,255,255,.035);
+      --line:rgba(143,177,222,.16); --line-strong:rgba(139,189,235,.35);
+      --blue:#2e62e6; --teal:#08a7b7; --cyan:#46dcea;
+      --ok:#3ddc97; --warn:#f5b544; --bad:#ff7a7a;
+      --fd:'Poppins',sans-serif; --fb:'Poppins',sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0; padding:0}
+    body{background:var(--base-deep); color:var(--ink); font-family:var(--fb);
+      -webkit-font-smoothing:antialiased; min-height:100vh}
+    .topbar{position:sticky; top:0; z-index:20; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      background:rgba(1,4,20,.72); border-bottom:1px solid var(--line);}
+    .topbar-in{padding:14px clamp(20px,4vw,72px); display:flex; align-items:center; gap:28px;}
+    .brand{display:flex; align-items:center; gap:14px; text-decoration:none; color:var(--ink)}
+    .brand img{height:26px; width:auto; display:block}
+    .brand small{font-weight:800; font-size:10px; letter-spacing:.24em; color:var(--muted); text-transform:uppercase}
+    .mainnav{display:flex; gap:4px; margin-left:8px}
+    .mainnav a{color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.08em;
+      text-transform:uppercase; padding:8px 14px; border-radius:8px}
+    .mainnav a:hover{color:var(--ink); background:rgba(255,255,255,.04)}
+    .mainnav a.active{color:var(--ink); background:rgba(53,102,210,.16)}
+    .top-right{margin-left:auto; display:flex; align-items:center; gap:12px}
+    .rolechip{font-weight:800; font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--cyan); border:1px solid rgba(70,220,234,.3); background:rgba(70,220,234,.07);
+      padding:6px 12px; border-radius:999px}
+    .avatar{width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+      background:linear-gradient(135deg,#2654c5,#0b8fa8); font-weight:800; font-size:13px}
+    .logout{color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase}
+    .wrap{max-width:1060px; margin:0 auto; padding:60px clamp(20px,4vw,72px) 90px}
+    .eyebrow{font-weight:800; font-size:10px; letter-spacing:.24em; color:var(--muted);
+      text-transform:uppercase; margin-bottom:16px}
+    .pagehead{margin-bottom:32px}
+    .pagehead h1{font-family:var(--fd); font-weight:700; text-transform:uppercase;
+      font-size:clamp(46px,6vw,88px); line-height:1; margin:0 0 12px; letter-spacing:.01em}
+    .sub{color:var(--muted); font-size:15px; margin:0; max-width:640px; line-height:1.6}
+    .tabs{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:28px}
+    .tab{display:inline-flex; align-items:center; gap:10px; border:1px solid var(--line);
+      background:rgba(255,255,255,.03); color:var(--muted-strong); font-family:var(--fb);
+      font-weight:700; font-size:12px; letter-spacing:.05em; padding:12px 18px; border-radius:999px;
+      cursor:pointer; transition:border-color .2s, background .2s, color .2s, transform .2s}
+    .tab:hover{border-color:var(--line-strong); color:var(--ink); transform:translateY(-2px)}
+    .tab.on{color:var(--ink); border-color:var(--line-strong); background:rgba(53,102,210,.16)}
+    .tab .dot{width:8px; height:8px; border-radius:50%; flex:none}
+    .detail{background:var(--panel); border:1px solid var(--line); border-radius:18px;
+      padding:38px clamp(24px,4vw,44px); animation:fadeUp .45s cubic-bezier(.2,.75,.2,1)}
+    @keyframes fadeUp{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+    .dhead{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:28px}
+    .scode{font-weight:800; font-size:10px; letter-spacing:.18em; color:var(--muted);
+      text-transform:uppercase; margin-bottom:10px}
+    .dhead h2{font-family:var(--fd); font-weight:700; text-transform:uppercase;
+      font-size:clamp(30px,3.6vw,50px); line-height:1.05; margin:0; letter-spacing:.01em}
+    .dhead .pill{flex:none; margin-top:6px}
+    .pill{display:inline-block; font-weight:800; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+      padding:6px 12px; border-radius:999px; border:1px solid}
+    .pill.ok{color:var(--ok); border-color:rgba(61,220,151,.4); background:rgba(61,220,151,.08)}
+    .pill.tight{color:var(--warn); border-color:rgba(245,181,68,.4); background:rgba(245,181,68,.08)}
+    .pill.bad{color:var(--bad); border-color:rgba(255,122,122,.4); background:rgba(255,122,122,.08)}
+    .pill.dim{color:var(--muted); border-color:var(--line); background:rgba(255,255,255,.03)}
+    .dstats{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:34px}
+    .dstat{background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+    .dstat span{display:block; font-size:10px; font-weight:800; letter-spacing:.18em;
+      text-transform:uppercase; color:var(--muted); margin-bottom:8px}
+    .dstat b{font-size:20px; font-weight:700}
+    .dstat b.pos{color:var(--ok)} .dstat b.neg{color:var(--bad)}
+    .footnote{margin:40px 0 0; padding-top:20px; border-top:1px solid var(--line);
+      color:rgba(162,182,207,.6); font-size:11px; line-height:1.6; text-align:center}
+    @media (max-width:900px){ .dstats{grid-template-columns:repeat(3,1fr)} .mainnav{display:none} }
+    @media (max-width:520px){ .dstats{grid-template-columns:1fr 1fr} .detail{padding:28px 20px} }
+    .xsec{margin-bottom:52px}
+    .xsec-h{font-family:var(--fd); font-weight:700; text-transform:uppercase;
+      font-size:clamp(26px,3vw,38px); letter-spacing:.01em; margin:0 0 6px}
+    .xsec-sub{color:var(--muted); font-size:13.5px; margin:0 0 26px; line-height:1.6}
+    .xstats{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:34px}
+    .hbars{display:flex; flex-direction:column; background:var(--panel);
+      border:1px solid var(--line); border-radius:16px; padding:26px clamp(20px,3vw,34px)}
+    .hbar-row{display:grid; grid-template-columns:200px 1fr 64px; gap:16px; align-items:center; padding:11px 0}
+    .hbar-row+.hbar-row{border-top:1px dashed rgba(143,177,222,.12)}
+    .hbar-name{font-weight:700; font-size:13.5px}
+    .hbar-name small{display:block; font-weight:600; font-size:11px; color:var(--muted); margin-top:3px}
+    .hbar-track{height:12px; border-radius:99px; background:rgba(255,255,255,.06); overflow:hidden}
+    .hbar-track i{display:block; height:100%; border-radius:99px; transition:width .8s cubic-bezier(.2,.75,.2,1)}
+    .hbar-val{font-family:var(--fd); font-weight:700; font-size:22px; text-align:right; line-height:1}
+    .tgroups{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:6px}
+    .tgroup{background:rgba(255,255,255,.02); border:1px solid var(--line); border-radius:12px; padding:18px 20px}
+    .tgroup h4{margin:0 0 12px; font-size:10px; font-weight:800; letter-spacing:.2em;
+      text-transform:uppercase; color:var(--muted)}
+    .tgroup h4 b{color:var(--ink)}
+    .trow{display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:7px 0;
+      color:var(--muted-strong)}
+    .trow+.trow{border-top:1px dashed rgba(143,177,222,.1)}
+    .trow span:last-child{color:var(--muted); white-space:nowrap; font-size:12px}
+    .tempty{color:var(--muted); font-size:13px; padding:6px 0}
+    .verdict{margin-top:22px; padding:16px 20px; border-left:3px solid #f5b544;
+      background:rgba(245,181,68,.06); border-radius:0 12px 12px 0; font-size:14px; line-height:1.6}
+    .verdict b{color:var(--ink)}
+    @media (max-width:900px){ .xstats{grid-template-columns:repeat(3,1fr)} .tgroups{grid-template-columns:1fr}
+      .hbar-row{grid-template-columns:130px 1fr 52px} }
+    /* ---- entrance ---- */
+    #abyss{position:fixed; inset:0; background:#010313; z-index:60; pointer-events:none;
+      animation:abyssOut .6s ease 0s forwards}
+    @keyframes abyssOut{to{opacity:0; visibility:hidden}}
+    .rise{opacity:0; transform:translateY(22px);
+      animation:riseIn .7s cubic-bezier(.2,.75,.2,1) var(--rd,.15s) forwards}
+    @keyframes riseIn{to{opacity:1; transform:none}}
+  </style>
+</head>
+<body>
+  <div id="abyss"></div>
+  <header class="topbar">
+    <div class="topbar-in">
+      <a class="brand" id="brandHome" href="dashboard.html"><img src="https://admin.miraisot.com/uploads/Logo_67db14a300.svg" alt="Mirai" /><small>Progression Tracker</small></a>
+      <nav class="mainnav">
+        <a id="navDash" href="dashboard.html">Dashboard</a>
+        <a id="navSubj" href="subjects.html">Subjects</a>
+        <a href="exams.html" class="active">Exams</a>
+        <a id="navFaculty" href="faculty.html">Faculty</a>
+        <a id="navStudents" href="students.html">Students</a>
+        <a id="navCalendar" href="calendar.html">Calendar</a>
+      </nav>
+      <div class="top-right">
+        <span class="rolechip" id="roleChip">Student</span>
+        <span class="avatar" id="avatarInit">S</span>
+        <a class="logout" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="pagehead">
+      <div class="eyebrow rise" id="examEyebrow" style="--rd:.2s">MID-SEMESTER EXAMINATIONS</div>
+      <h1 class="rise" style="--rd:.35s">Exam readiness</h1>
+      <p class="sub rise" id="examSub" style="--rd:.5s">Where every subject stands against the exam clock — and what it will take to finish in time.</p>
+    </div>
+    <section class="xsec rise" style="--rd:.6s">
+      <h2 class="xsec-h">Overall</h2>
+      <p class="xsec-sub">The whole track against one exam date.</p>
+      <div class="xstats" id="xStats"></div>
+      <div class="hbars" id="xBars"></div>
+    </section>
+    <section class="xsec rise" style="--rd:.8s">
+      <h2 class="xsec-h">Per subject</h2>
+      <p class="xsec-sub">Syllabus status, remaining load and the daily pace each subject needs.</p>
+      <div class="tabs rise" id="xTabs" style="--rd:.95s"></div>
+      <section class="detail rise" id="xDetail" style="--rd:1.05s"></section>
+    </section>
+    <p class="footnote">Demo data for the Student Challenge prototype. Readiness blends coverage, buffer and pace — hours weighted, never topic counts.</p>
+  </main>
+  <script>
+  (function(){
+  var TODAY = '2026-10-06';
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var SUBJECTS = [
+    {id:'maths1', code:'AAS103D', name:'Calculus and Linear Algebra', short:'Maths-I', kind:'University', buffer:1.08, pace:-2.1, topics:[{t:'Multivariable calculus & optimization', h:10, pct:100, d:'2026-09-07', subs:[{t:'Limits, continuity, differentiability (two variables)',pct:100},{t:'Partial derivatives',pct:100},{t:'Composite functions',pct:100},{t:'Total derivative',pct:100},{t:'Euler theorem (homogeneous functions)',pct:100},{t:'Change of variables',pct:100},{t:'Expansions for functions of two variables',pct:100},{t:'Jacobians and properties',pct:100},{t:'Maxima-minima of several variables',pct:100},{t:'Lagrange multipliers',pct:100},{t:'Error approximation',pct:100}]},{t:'Multiple integrals & special functions', h:10, pct:100, d:'2026-09-17', subs:[{t:'Double integrals: evaluation',pct:100},{t:'Triple integrals: evaluation',pct:100},{t:'Change of order of integration',pct:100},{t:'Change of variables in integrals',pct:100},{t:'Beta function and properties',pct:100},{t:'Gamma function and properties',pct:100},{t:'Dirichlet integral',pct:100},{t:'Area via double integrals',pct:100},{t:'Volume via triple integrals',pct:100}]},{t:'Vector calculus', h:10, pct:70, d:'2026-09-28', subs:[{t:'Scalar and vector point functions',pct:70},{t:'Gradient of a scalar field',pct:70},{t:'Directional derivatives',pct:70},{t:'Divergence and curl',pct:70},{t:'Solenoidal and irrotational fields',pct:70},{t:'Vector integration',pct:70},{t:'Stokes theorem',pct:70},{t:'Gauss divergence theorem',pct:70}]},{t:'Matrices & eigenvalue methods', h:10, pct:30, d:'2026-10-08', subs:[{t:'Matrix basics and complex matrices',pct:30},{t:'Hermitian, skew-Hermitian, unitary matrices',pct:30},{t:'Inverse via elementary transformation',pct:30},{t:'Rank via echelon form',pct:30},{t:'Gauss elimination method',pct:30},{t:'Gauss-Seidel iterative method',pct:30},{t:'Eigenvalues and eigenvectors',pct:30},{t:'Similarity transformation',pct:30},{t:'Diagonalization',pct:30}]},{t:'Vector spaces', h:10, pct:0, d:'2026-10-19', subs:[{t:'Fields: definition',pct:0},{t:'Vector spaces: introduction',pct:0},{t:'Basic properties of vector spaces',pct:0},{t:'Subspaces',pct:0},{t:'Linear dependence and independence',pct:0},{t:'Basis and dimension',pct:0}]}]},
+    {id:'phy', code:'AAS101E', name:'Quantum Physics and Applications', short:'Physics', kind:'University', buffer:0.94, pace:-5.6, topics:[{t:'Fundamentals of quantum mechanics', h:8, pct:100, d:'2026-09-09', subs:[{t:'Limits of classical mechanics',pct:100},{t:'de-Broglie matter waves',pct:100},{t:'Davisson-Germer experiment',pct:100},{t:'Wave packets',pct:100},{t:'Phase vs group velocity',pct:100},{t:'Heisenberg uncertainty principle',pct:100},{t:'Time-dependent Schrodinger equation',pct:100},{t:'Time-independent Schrodinger equation',pct:100},{t:'Particle in a one-dimensional box',pct:100},{t:'Wave function: physical interpretation',pct:100}]},{t:'Quantum theory of solids', h:10, pct:80, d:'2026-09-21', subs:[{t:'Free electron theory',pct:80},{t:'Fermi-Dirac distribution',pct:80},{t:'Energy bands in solids',pct:80},{t:'Band gap',pct:80},{t:'Conductors vs semiconductors vs insulators',pct:80},{t:'Effective mass',pct:80},{t:'Density of states',pct:80},{t:'Intrinsic and extrinsic semiconductors',pct:80},{t:'Conductivity of semiconductors',pct:80},{t:'Fermi level',pct:80}]},{t:'Quantum computing & communication', h:8, pct:40, d:'2026-09-30', subs:[{t:'Quantum computation basics',pct:40},{t:'Quantum states',pct:40},{t:'Superposition',pct:40},{t:'Entanglement',pct:40},{t:'Decoherence',pct:40},{t:'Qubits',pct:40},{t:'Physical qubit realizations',pct:40},{t:'Quantum gates: single and multi-qubit',pct:40},{t:'Quantum cryptography and QKD',pct:40}]},{t:'Photonics: fibre optics & laser', h:10, pct:20, d:'2026-10-07', subs:[{t:'Optical fibre fundamentals',pct:20},{t:'Acceptance angle and cone',pct:20},{t:'Numerical aperture',pct:20},{t:'Light propagation in fibre',pct:20},{t:'Attenuation in fibres',pct:20},{t:'Radiation-matter interaction',pct:20},{t:'Spontaneous vs stimulated emission',pct:20},{t:'Einstein coefficients',pct:20},{t:'Ruby laser',pct:20},{t:'He-Ne laser',pct:20},{t:'Laser applications',pct:20}]},{t:'Superconductors & nanomaterials', h:8, pct:0, d:'2026-10-18', subs:[{t:'Resistivity vs temperature',pct:0},{t:'Critical field',pct:0},{t:'Meissner effect',pct:0},{t:'Type-I vs Type-II superconductors',pct:0},{t:'Persistent current',pct:0},{t:'High-temperature superconductors',pct:0},{t:'Properties and applications',pct:0},{t:'Nanomaterials: introduction',pct:0},{t:'Quantum dots, wires and wells',pct:0},{t:'Nanomaterial applications',pct:0}]}]},
+    {id:'bee', code:'AEE101A', name:'Fundamentals of Electrical Engineering', short:'Electrical', kind:'University', buffer:1.15, pace:0.4, topics:[{t:'DC circuits & basic quantities', h:10, pct:100, d:'2026-09-08', subs:[{t:'Charge, current, voltage, EMF',pct:100},{t:'Resistance and Ohm law',pct:100},{t:'Series and parallel resistors',pct:100},{t:'Voltage and current dividers',pct:100},{t:'Power and energy in DC circuits',pct:100},{t:'KVL and KCL',pct:100},{t:'Mesh analysis',pct:100},{t:'Nodal analysis',pct:100},{t:'Thevenin theorem',pct:100}]},{t:'Single-phase AC circuits', h:10, pct:100, d:'2026-09-18', subs:[{t:'AC generation',pct:100},{t:'Peak, RMS and average values',pct:100},{t:'Form factor',pct:100},{t:'Phasor representation',pct:100},{t:'R, L, C in AC circuits',pct:100},{t:'Series RL and RC circuits',pct:100},{t:'Impedance',pct:100},{t:'Active, reactive, apparent power',pct:100},{t:'Power factor and improvement',pct:100},{t:'Wattmeter measurement',pct:100}]},{t:'Three-phase systems', h:8, pct:75, d:'2026-09-29', subs:[{t:'Advantages of three-phase supply',pct:75},{t:'Generation of balanced voltage',pct:75},{t:'Star connection',pct:75},{t:'Delta connection',pct:75},{t:'Phase vs line quantities',pct:75},{t:'Power in balanced circuits',pct:75},{t:'Two-wattmeter method',pct:75},{t:'Neutral wire concept',pct:75}]},{t:'Magnetic circuits & transformers', h:10, pct:30, d:'2026-10-06', subs:[{t:'Magnetic flux and flux density',pct:30},{t:'MMF and reluctance',pct:30},{t:'Series magnetic circuit',pct:30},{t:'Faraday law of induction',pct:30},{t:'Self and mutual inductance',pct:30},{t:'Transformer working principle',pct:30},{t:'EMF equation',pct:30},{t:'Ideal transformer ratios',pct:30},{t:'Equivalent circuit',pct:30},{t:'Losses and efficiency',pct:30}]},{t:'Electrical machines & emerging systems', h:10, pct:0, d:'2026-10-17', subs:[{t:'DC motor principle',pct:0},{t:'Back EMF and torque',pct:0},{t:'DC motor speed control',pct:0},{t:'DC motor types and applications',pct:0},{t:'BLDC motor concept',pct:0},{t:'Three-phase induction motor',pct:0},{t:'Rotating magnetic field and slip',pct:0},{t:'Solar PV: single diode model',pct:0},{t:'PV current-voltage characteristics',pct:0},{t:'Lab electrical safety',pct:0}]}]},
+    {id:'pps', code:'ACS101', name:'Programming Languages', short:'C Programming', kind:'University', buffer:1.24, pace:1.8, topics:[{t:'Programming basics in C', h:8, pct:100, d:'2026-09-06', subs:[{t:'Structure of a C program',pct:100},{t:'Compilation and execution',pct:100},{t:'Data types and variables',pct:100},{t:'Constants',pct:100},{t:'Operators: arithmetic, relational, logical',pct:100},{t:'scanf and printf',pct:100},{t:'Type conversion',pct:100},{t:'Simple expressions',pct:100}]},{t:'Control flow & functions in C', h:10, pct:100, d:'2026-09-16', subs:[{t:'Control statements: if and switch',pct:100},{t:'for loop',pct:100},{t:'while loop',pct:100},{t:'do-while loop',pct:100},{t:'break and continue',pct:100},{t:'Function definition and call',pct:100},{t:'Return values',pct:100},{t:'Call by value',pct:100},{t:'Recursion: factorial and Fibonacci',pct:100}]},{t:'Arrays, strings & files in C', h:10, pct:100, d:'2026-09-26', subs:[{t:'1D array declaration and traversal',pct:100},{t:'Array input and output',pct:100},{t:'Max, min, sum, average',pct:100},{t:'Strings: gets and puts',pct:100},{t:'strlen, strcpy, strcmp',pct:100},{t:'Pointer concept',pct:100},{t:'Structures',pct:100},{t:'File handling',pct:100}]},{t:'Python introduction', h:10, pct:80, d:'2026-10-03', subs:[{t:'Why Python: AI, data science, automation',pct:80},{t:'Variables and data types',pct:80},{t:'print and input',pct:80},{t:'Python operators',pct:80},{t:'if/else',pct:80},{t:'for loop',pct:80},{t:'while loop',pct:80},{t:'Functions: def and return',pct:80},{t:'Default arguments',pct:80}]},{t:'Python data & emerging applications', h:10, pct:30, d:'2026-10-10', subs:[{t:'Lists and basic operations',pct:30},{t:'Tuples',pct:30},{t:'Dictionaries',pct:30},{t:'Sets',pct:30},{t:'Text file read and write',pct:30},{t:'Reading CSV files',pct:30},{t:'NumPy: arrays and mean',pct:30},{t:'Matplotlib: line graphs',pct:30},{t:'Mini demo: IoT sensor simulation',pct:30}]}]},
+    {id:'egd', code:'ACE151E', name:'Computer Aided Engineering Drawing Lab', short:'Graphics', kind:'University', buffer:1.32, pace:4.2, topics:[{t:'Drawing standards & CAD setup', h:8, pct:100, d:'2026-09-07', subs:[{t:'BIS drawing conventions',pct:100},{t:'Sheet sizes and title blocks',pct:100},{t:'Lines and lettering',pct:100},{t:'Dimensioning basics',pct:100},{t:'CAD interface and coordinates',pct:100},{t:'Layers and object snap',pct:100},{t:'A3/A4 template setup',pct:100}]},{t:'Geometric construction & curves', h:10, pct:100, d:'2026-09-17', subs:[{t:'Polygon construction',pct:100},{t:'Tangents',pct:100},{t:'Plain and diagonal scales',pct:100},{t:'Conic sections',pct:100},{t:'CAD draw and modify commands',pct:100},{t:'Bezier and B-spline curves',pct:100},{t:'Geometric transformations',pct:100}]},{t:'Orthographic projections', h:8, pct:100, d:'2026-09-27', subs:[{t:'Projections of points',pct:100},{t:'Lines inclined to planes',pct:100},{t:'True length and inclination',pct:100},{t:'Projections of planes',pct:100},{t:'Solids: prism, pyramid, cylinder, cone',pct:100},{t:'First angle projection',pct:100},{t:'Third angle convention',pct:100}]},{t:'Sections, developments & isometric', h:8, pct:65, d:'2026-10-04', subs:[{t:'Section planes and hatching',pct:65},{t:'Sections of solids',pct:65},{t:'True shape of sections',pct:65},{t:'Development of prisms and cylinders',pct:65},{t:'Development of cones and pyramids',pct:65},{t:'Isometric scale and axes',pct:65},{t:'Ortho-to-isometric conversion',pct:65},{t:'Missing views practice',pct:65}]},{t:'CAD modelling & mini project', h:10, pct:20, d:'2026-10-11', subs:[{t:'Hardware component detail drawing',pct:20},{t:'CAD editing: move, rotate, scale, array',pct:20},{t:'Lab and server room layout drawing',pct:20},{t:'Solid modelling: extrude, revolve, boolean',pct:20},{t:'CSG vs B-rep vs STL mesh',pct:20},{t:'Script-driven parametric drawing',pct:20},{t:'CAD file formats: DXF, STEP, STL, SVG',pct:20},{t:'Mini project and AI-assisted CAD',pct:20}]}]},
+    {id:'web', code:'MR201', name:'Web Development', short:'Web Dev', kind:'Mirai Track', buffer:1.22, pace:2.0, topics:[
+      {t:'HTML5 & semantic markup', h:10, pct:100, d:'2026-09-05'},
+      {t:'CSS3: box model, flexbox & grid', h:12, pct:100, d:'2026-09-15'},
+      {t:'Responsive design & media queries', h:8, pct:100, d:'2026-09-25'},
+      {t:'JavaScript ES6+ fundamentals', h:12, pct:80, d:'2026-10-02'},
+      {t:'DOM, events & fetch API', h:10, pct:30, d:'2026-10-09'},
+      {t:'Project: portfolio & clone build', h:12, pct:0, d:'2026-10-17'}
+    ]},
+    {id:'dsa', code:'CS301', name:'Data Structures & Algorithms', short:'DSA', kind:'Mirai Track', buffer:1.18, pace:2.4, topics:[
+      {t:'C++ STL & complexity analysis', h:10, pct:100, d:'2026-09-08'},
+      {t:'Arrays, strings & two pointers', h:12, pct:100, d:'2026-09-18'},
+      {t:'Recursion & backtracking', h:12, pct:70, d:'2026-09-28'},
+      {t:'Linked lists, stacks & queues', h:12, pct:40, d:'2026-10-06'},
+      {t:'Trees & BST', h:12, pct:10, d:'2026-10-13'},
+      {t:'Graphs & DP introduction', h:14, pct:0, d:'2026-10-21'}
+    ]},
+    {id:'iks', code:'AAS104', name:'Introduction to Indian Knowledge System', short:'IKS', kind:'University', buffer:1.12, pace:0.6, topics:[
+      {t:'Foundations of Indian Knowledge System', h:8, pct:100, d:'2026-09-10', subs:[{t:'What counts as knowledge in Indian tradition',pct:100},{t:'Oral vs written transmission of knowledge',pct:100},{t:'Overview of key texts and disciplines',pct:100},{t:'Darshana schools at a glance',pct:100},{t:'Role of Sanskrit in knowledge systems',pct:100},{t:'Classification of knowledge streams',pct:100}]},
+      {t:'Indian mathematics, astronomy & scientific thinking', h:8, pct:80, d:'2026-09-22', subs:[{t:'Decimal system and zero',pct:80},{t:'Aryabhata: key contributions',pct:80},{t:'Brahmagupta and early algebra',pct:80},{t:'Geometry in Sulba Sutras',pct:80},{t:'Indian astronomical models',pct:80},{t:'Calendars and timekeeping',pct:80},{t:'Scientific method in ancient texts',pct:80}]},
+      {t:'Engineering, technology & material sciences', h:8, pct:40, d:'2026-10-05', subs:[{t:'Metallurgy: iron pillar of Delhi',pct:40},{t:'Wootz steel and crucible process',pct:40},{t:'Town planning: Harappa and Mohenjo-daro',pct:40},{t:'Water management systems',pct:40},{t:'Textile and dyeing technology',pct:40},{t:'Shipbuilding traditions',pct:40},{t:'Measurement instruments',pct:40}]},
+      {t:'Health, wellness, environment & governance', h:8, pct:10, d:'2026-10-16', subs:[{t:'Ayurveda: core principles',pct:10},{t:'Yoga and wellness systems',pct:10},{t:'Traditional ecological knowledge',pct:10},{t:'Water and forest conservation practices',pct:10},{t:'Governance ideas from Arthashastra',pct:10},{t:'Community resource management',pct:10}]},
+      {t:'Contemporary relevance, AI & applications of IKS', h:8, pct:0, d:'2026-10-28', subs:[{t:'IKS in modern curricula (NEP 2020)',pct:0},{t:'Traditional knowledge digital library',pct:0},{t:'AI meets Sanskrit NLP',pct:0},{t:'Sustainable tech from traditional practices',pct:0},{t:'Case studies: modern applications',pct:0},{t:'Course review and discussion',pct:0}]}
+    ]},
+    {id:'phylab', code:'AAS151', name:'Physics Laboratory', short:'Phy Lab', kind:'University', buffer:1.2, pace:1.0, topics:[
+      {t:'Optics experiments I', h:8, pct:100, d:'2026-09-08', subs:[{t:'Newton\u2019s rings: wavelength of sodium light',pct:100},{t:'Diffraction grating: wavelength measurement',pct:100},{t:'Polarimeter: specific rotation of sugar solution',pct:100}]},
+      {t:'Semiconductor experiments', h:8, pct:100, d:'2026-09-20', subs:[{t:'Band gap by four-probe method',pct:100},{t:'Hall effect: carrier concentration',pct:100},{t:'Diode characteristics',pct:100}]},
+      {t:'Magnetism & modern physics', h:8, pct:70, d:'2026-10-02', subs:[{t:'Stewart & Gee: magnetic field mapping',pct:70},{t:'Photoelectric effect: Planck\u2019s constant',pct:70},{t:'e/m by Thomson method',pct:70}]},
+      {t:'Laser & fibre optics', h:8, pct:30, d:'2026-10-12', subs:[{t:'He-Ne laser characteristics',pct:30},{t:'Optical fibre: numerical aperture',pct:30},{t:'Fibre attenuation measurement',pct:30}]},
+      {t:'Dielectrics & revision', h:8, pct:0, d:'2026-10-22', subs:[{t:'Dielectric constant by capacitor method',pct:0},{t:'Error analysis and graphing',pct:0},{t:'Viva preparation and record completion',pct:0}]}
+    ]},
+    {id:'prompt', code:'AAI101', name:'Introduction to AI and Prompt Engineering', short:'AI & Prompts', kind:'University', buffer:1.15, pace:0.8, topics:[
+      {t:'Introduction to Artificial Intelligence', h:8, pct:100, d:'2026-09-09', subs:[{t:'What is AI: definition and scope',pct:100},{t:'History of AI and AI winters',pct:100},{t:'Narrow vs general AI',pct:100},{t:'Turing test',pct:100},{t:'AI vs traditional programs',pct:100},{t:'AI in industry today',pct:100}]},
+      {t:'Core AI concepts', h:8, pct:85, d:'2026-09-21', subs:[{t:'Machine learning: supervised vs unsupervised',pct:85},{t:'KNN classification',pct:85},{t:'Naive Bayes classifier',pct:85},{t:'K-means clustering',pct:85},{t:'Neural networks: neurons and weights',pct:85},{t:'Deep learning and GPUs',pct:85},{t:'CNN basics and computer vision',pct:85}]},
+      {t:'Generative AI and large language models', h:8, pct:50, d:'2026-10-04', subs:[{t:'What is generative AI',pct:50},{t:'Transformer architecture (2017)',pct:50},{t:'How LLMs are trained',pct:50},{t:'Tokens and context windows',pct:50},{t:'Capabilities and limits of LLMs',pct:50},{t:'Hallucination problem',pct:50}]},
+      {t:'AI applications in engineering domains', h:8, pct:20, d:'2026-10-14', subs:[{t:'AI in manufacturing and design',pct:20},{t:'Predictive maintenance',pct:20},{t:'AI in healthcare and imaging',pct:20},{t:'NLP for technical documents',pct:20},{t:'Responsible and ethical AI use',pct:20}]},
+      {t:'Prompt engineering', h:8, pct:0, d:'2026-10-25', subs:[{t:'Anatomy of a good prompt',pct:0},{t:'Roles, context and constraints',pct:0},{t:'Few-shot prompting with examples',pct:0},{t:'Chain-of-thought prompting',pct:0},{t:'Iterative refinement and testing',pct:0},{t:'Prompts for coding and study tasks',pct:0}]}
+    ]},
+    {id:'langlab', code:'', name:'Language Lab', short:'Lang Lab', kind:'University', buffer:1.1, pace:0, topics:[
+      {t:'Listening comprehension & note-taking', h:6, pct:0, d:'2026-10-21'},
+      {t:'Speaking & presentation skills', h:6, pct:0, d:'2026-10-28'},
+      {t:'Reading & vocabulary building', h:6, pct:0, d:'2026-11-04'},
+      {t:'Writing: reports & emails', h:6, pct:0, d:'2026-11-11'},
+      {t:'Group discussion & interview skills', h:6, pct:0, d:'2026-11-18'}
+    ]},
+    {id:'beelab', code:'', name:'Electrical Engineering Lab', short:'Elec Lab', kind:'University', buffer:1.1, pace:0, topics:[
+      {t:'Verification of KVL & KCL', h:4, pct:0, d:'2026-10-22'},
+      {t:'Thevenin & Norton theorems', h:4, pct:0, d:'2026-10-29'},
+      {t:'AC measurements & power factor', h:4, pct:0, d:'2026-11-05'},
+      {t:'Transformer OC & SC tests', h:4, pct:0, d:'2026-11-12'},
+      {t:'DC motor characteristics', h:4, pct:0, d:'2026-11-19'},
+      {t:'Three-phase power measurement', h:4, pct:0, d:'2026-11-26'}
+    ]},
+    {id:'pd', code:'PD101', name:'Product Development', short:'Prod Dev', kind:'Mirai Track', buffer:1.1, pace:0, topics:[
+      {t:'Problem discovery & ideation', h:6, pct:0, d:'2026-10-23'},
+      {t:'User research & personas', h:6, pct:0, d:'2026-10-30'},
+      {t:'Prototyping & wireframing', h:6, pct:0, d:'2026-11-06'},
+      {t:'MVP building', h:6, pct:0, d:'2026-11-13'},
+      {t:'Testing & iteration', h:6, pct:0, d:'2026-11-20'},
+      {t:'Launch & pitch', h:6, pct:0, d:'2026-11-27'}
+    ]}
+  ];
+  var EXAM = {name:'Mid-Semester Examinations', date:'2026-11-24', readiness:{maths1:62, phy:48, bee:68, pps:78, egd:74, web:84, dsa:71, langlab:0, beelab:0, pd:0}};
+  function fmtD(d){ var p=d.split('-'); return (+p[2])+' '+MONTHS[+p[1]-1]; }
+  function scope(s){ return s.topics.filter(function(t){return !t.skipped;}); }
+  function scopeH(s){ return scope(s).reduce(function(a,t){return a+t.h;},0); }
+  function coveredH(s){ return scope(s).reduce(function(a,t){return a+t.h*t.pct/100;},0); }
+  function coverage(s){ return Math.round(coveredH(s)/scopeH(s)*100); }
+  function stOf(b){ return b>=1.15?'ok':(b>=1?'tight':'bad'); }
+  function stLabel(b){ return b>=1.15?'On track':(b>=1?'Tight':'Danger'); }
+  function paceTxt(p){ return p>=0 ? '<span class="pos">'+p.toFixed(1)+'h ahead of pace</span>' : '<span class="neg">'+Math.abs(p).toFixed(1)+'h behind pace</span>'; }
+  function topicStatus(t){
+    if(t.skipped) return ['dim','Skipped'];
+    if(t.pct>=100) return ['ok','Completed'];
+    if(t.d < TODAY) return ['bad','Overdue'];
+    if(t.pct>0) return ['tight','In progress'];
+    return ['dim','Upcoming'];
+  }
+    function heat(r){ return r<55 ? 'linear-gradient(180deg,#ff8a8a,#cf4d4d)' : (r<70 ? 'linear-gradient(180deg,#f7c55c,#cf8a2e)' : 'linear-gradient(180deg,#3ddc97,#0b8fa8)'); }
+    function rCls(r){ return r>=70?'ok':(r>=55?'tight':'bad'); }
+    var daysLeft = Math.max(0, Math.round((new Date(EXAM.date)-new Date(TODAY))/864e5));
+    var role = (new URLSearchParams(location.search).get('role')||'student').toLowerCase();
+    var isFaculty = role==='faculty';
+    var isMgr = role==='manager';
+    document.getElementById('roleChip').textContent = isMgr?'Campus Controller':(isFaculty?'Faculty':'Student');
+    document.getElementById('avatarInit').textContent = isMgr?'C':(isFaculty?'F':'S');
+    var q = '?role='+role;
+    document.getElementById('brandHome').href = 'dashboard.html'+q;
+    document.getElementById('brandHome').addEventListener('click', function(){ try{sessionStorage.removeItem('mirai_intro_seen');}catch(e){} });
+    document.getElementById('navDash').href = 'dashboard.html'+q;
+    document.getElementById('navSubj').href = 'subjects.html'+q;
+    document.getElementById('navFaculty').href = 'faculty.html'+q;
+    document.getElementById('navStudents').href = 'students.html'+q;
+    document.getElementById('navCalendar').href = 'calendar.html'+q;
+    if(!isFaculty && !isMgr) document.getElementById('navStudents').style.display='none';
+    document.getElementById('examEyebrow').textContent = EXAM.name.toUpperCase()+' · '+fmtD(EXAM.date).toUpperCase()+' · '+daysLeft+' DAYS LEFT';
+    function remH(s){ return scopeH(s)-coveredH(s); }
+    function needPerDay(s){ return remH(s)/daysLeft; }
+    (function renderOverall(){
+      var rs = SUBJECTS.map(function(s){ return EXAM.readiness[s.id]; });
+      var avg = Math.round(rs.reduce(function(a,b){return a+b;},0)/rs.length);
+      var totRem = SUBJECTS.reduce(function(a,s){return a+remH(s);},0);
+      var onTrack = SUBJECTS.filter(function(s){return s.buffer>=1.15;}).length;
+      var weak = SUBJECTS.reduce(function(a,s){ return EXAM.readiness[s.id]<EXAM.readiness[a.id]?s:a; });
+      var tiles = [
+        ['Days left', daysLeft],
+        ['Avg readiness', avg+'%'],
+        ['Syllabus remaining', Math.round(totRem)+'h'],
+        ['Required pace', (totRem/daysLeft).toFixed(1)+'h/day'],
+        ['Subjects on track', onTrack+'/'+SUBJECTS.length],
+        ['Weakest subject', weak.short||weak.name]
+      ];
+      document.getElementById('xStats').innerHTML = tiles.map(function(t){
+        return '<div class="dstat"><span>'+t[0]+'</span><b>'+t[1]+'</b></div>';
+      }).join('');
+      var order = SUBJECTS.slice().sort(function(a,b){ return EXAM.readiness[a.id]-EXAM.readiness[b.id]; });
+      document.getElementById('xBars').innerHTML = order.map(function(s){
+        var r = EXAM.readiness[s.id];
+        return '<div class="hbar-row"><div class="hbar-name">'+s.name+'<small>'+s.kind+' · '+coverage(s)+'% syllabus covered</small></div>'+
+          '<div class="hbar-track"><i style="width:'+r+'%;background:'+heat(r)+'"></i></div>'+
+          '<div class="hbar-val">'+r+'%</div></div>';
+      }).join('');
+    })();
+    var tabsEl = document.getElementById('xTabs'), detEl = document.getElementById('xDetail');
+    var cur = SUBJECTS[0].id;
+    function renderTabs(){
+      tabsEl.innerHTML = SUBJECTS.map(function(s){
+        var r = EXAM.readiness[s.id];
+        var c = r>=70?'var(--ok)':(r>=55?'var(--warn)':'var(--bad)');
+        return '<button class="tab'+(s.id===cur?' on':'')+'" data-id="'+s.id+'">'+
+          '<span class="dot" style="background:'+c+'"></span><span>'+s.name+'</span></button>';
+      }).join('');
+      var tabs = tabsEl.querySelectorAll('.tab');
+      for(var i=0;i<tabs.length;i++){
+        tabs[i].addEventListener('click', function(){
+          cur = this.getAttribute('data-id'); renderTabs(); renderDetail();
+        });
+      }
+    }
+    function tgroup(title, list){
+      if(!list.length) return '<div class="tgroup"><h4>'+title+' <b>· 0</b></h4><div class="tempty">Nothing here.</div></div>';
+      var rows = list.map(function(t){
+        return '<div class="trow"><span>'+t.t+'</span><span>'+t.h+'h · '+t.pct+'%</span></div>';
+      }).join('');
+      return '<div class="tgroup"><h4>'+title+' <b>· '+list.length+'</b></h4>'+rows+'</div>';
+    }
+    function renderDetail(){
+      var s = null;
+      for(var i=0;i<SUBJECTS.length;i++) if(SUBJECTS[i].id===cur) s = SUBJECTS[i];
+      var r = EXAM.readiness[s.id], need = needPerDay(s);
+      var sc = scope(s);
+      var done = sc.filter(function(t){return t.pct>=100;}),
+          prog = sc.filter(function(t){return t.pct>0&&t.pct<100;}),
+          od = sc.filter(function(t){return t.d<TODAY&&t.pct<100;}),
+          up = sc.filter(function(t){return t.pct===0&&t.d>=TODAY;});
+      var verdict = need<=0.5 ? 'Syllabus nearly done — <b>revision mode</b>. Hold the buffer.'
+        : (need<=2 ? 'Needs <b>'+need.toFixed(1)+'h/day</b> to finish by '+fmtD(EXAM.date)+'. Steady and very doable.'
+        : 'Needs <b>'+need.toFixed(1)+'h/day</b> — the highest exam risk on the track. Clear overdue topics first.');
+      detEl.innerHTML =
+        '<div class="dhead"><div><div class="scode">'+s.kind+'</div><h2>'+s.name+'</h2></div>'+
+        '<span class="pill '+rCls(r)+'">'+r+'% ready</span></div>'+
+        '<div class="dstats">'+
+        '<div class="dstat"><span>Readiness</span><b>'+r+'%</b></div>'+
+        '<div class="dstat"><span>Coverage</span><b>'+coverage(s)+'%</b></div>'+
+        '<div class="dstat"><span>Buffer</span><b>'+s.buffer.toFixed(2)+'×</b></div>'+
+        '<div class="dstat"><span>Pace</span><b class="'+(s.pace>=0?'pos':'neg')+'">'+(s.pace>=0?'+':'')+s.pace.toFixed(1)+'h</b></div>'+
+        '<div class="dstat"><span>Remaining</span><b>'+Math.round(remH(s))+'h</b></div>'+
+        '<div class="dstat"><span>Needs</span><b>'+need.toFixed(1)+'h/day</b></div>'+
+        '</div>'+
+        '<div class="tgroups">'+
+        tgroup('Completed', done)+tgroup('In progress', prog)+
+        tgroup('Overdue', od)+tgroup('Upcoming', up)+
+        '</div><div class="verdict">'+verdict+'</div>';
+      detEl.classList.remove('rise'); detEl.style.animation='none'; void detEl.offsetWidth; detEl.style.animation='';
+    }
+    renderTabs(); renderDetail();
+  })();
+  </script>
+</body>
+</html>
