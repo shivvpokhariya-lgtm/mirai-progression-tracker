@@ -36,7 +36,7 @@ Pick a role on the login screen (demo login — no password is verified in this 
 ## Backend (Supabase)
 
 - Project `mirai-progression-tracker` (Postgres, RLS enabled). The browser uses only the publishable key; writes to reference tables stay closed to the anon role.
-- **Local-first dual-write:** every logged session is saved locally (source of truth for the dashboard engine) and mirrored into `session_logs`; the **Saved Sessions** page reads them back from the database.
+- **Local-first dual-write:** every logged session is saved locally (the dashboard engine's working state) and mirrored into `session_logs`. On load, dashboards merge the cloud logs back in (deduplicated) — a fresh browser rebuilds true progress from the database alone — and the **Saved Sessions** page is a pure database view.
 - Setup: run `supabase/schema-v2.sql`, then `supabase/seed-production.sql` (idempotent — 8 faculty, 13 subjects, 119 students, faculty–subject map, and the `session_logs` insert policy).
 
 ## Testing
@@ -54,6 +54,7 @@ See **TEST-REPORT.md** — hand-calculated verification of the dashboard math ag
 | `faculty.html` · `students.html` | Faculty profiles + student directory |
 | `calendar.html` · `saved-sessions.html` | Academic calendar · database-backed session history |
 | `campus.js` | Shared engine — setup state, date planning, metrics (single source of truth) |
+| `DESIGN.md` | Architecture + design document (this build's design decisions and trade-offs) |
 | `students.js` | Real 119-student roster (Sections A & B) |
 | `supabase.js` | Supabase client + session mirror |
 | `starfield.js` · `mobile.css` · `sw.js` · `manifest.json` | Brand background · phone layout · PWA |
