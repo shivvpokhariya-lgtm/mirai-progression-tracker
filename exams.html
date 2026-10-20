@@ -298,6 +298,12 @@ body{zoom:0.8;}
     var q = '?role='+role+(facId?'&fac='+facId:'');
     document.getElementById('brandHome').href = 'dashboard.html'+q;
     document.getElementById('brandHome').addEventListener('click', function(){ try{sessionStorage.removeItem('mirai_intro_seen');}catch(e){} });
+    /* faculty land on their own subjects first; manager/student keep the default order */
+    var FACULTY_SUBJECTS = {vishal:['pps','dsa','pd'], varun:['web','prompt'], gaurav:['maths1','iks'], aman:['bee','beelab'], suman:['phylab'], himanshu:['phy'], zakir:['egd'], soniya:['langlab']};
+    if(isFaculty && meFac){
+      var ownSubs = FACULTY_SUBJECTS[meFac.id]||[];
+      if(ownSubs.length) SUBJECTS.sort(function(a,b){ var ao=ownSubs.indexOf(a.id)>=0?0:1, bo=ownSubs.indexOf(b.id)>=0?0:1; return ao-bo; });
+    }
     document.getElementById('navDash').href = 'dashboard.html'+q;
     document.getElementById('navSubj').href = 'subjects.html'+q;
     document.getElementById('navFaculty').href = 'faculty.html'+q;
