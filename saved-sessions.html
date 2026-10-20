@@ -103,11 +103,9 @@ h1{font-size:28px;font-weight:800;margin-bottom:8px}
     var el=$(id); if(el) el.href=el.getAttribute('href').split('?')[0]+q;
   });
   if(!isFaculty&&!isManager){ var ns=$('navStudents'); if(ns) ns.style.display='none'; }
-  /* students are read-only on the dashboard — session logs are faculty/manager data */
+  /* Sessions is a faculty/manager section — students go straight to their dashboard */
   if(!isFaculty&&!isManager){
-    $('pageTitle').textContent='Saved Sessions';
-    $('pageSub').textContent='Session logs are recorded by faculty. Your course progress lives on the dashboard.';
-    $('sessionsList').innerHTML='<div class="empty">Nothing to show here for students.<br><a href="dashboard.html'+q+'" style="color:#46DCEA">Back to dashboard</a></div>';
+    location.replace('dashboard.html'+q);
     return;
   }
   $('pageTitle').textContent=isManager?'All Saved Sessions':'My Saved Sessions';
@@ -184,7 +182,7 @@ h1{font-size:28px;font-weight:800;margin-bottom:8px}
 document.addEventListener('click', function(e){
   var a = e.target.closest('a.logout');
   if(a){
-    try{ localStorage.removeItem('mirai_role'); localStorage.removeItem('mirai_fac'); }catch(err){}
+    try{ localStorage.removeItem('mirai_role'); localStorage.removeItem('mirai_fac'); localStorage.removeItem('mirai_student'); localStorage.removeItem('mirai_student_sec'); }catch(err){}
   }
 });
 </script>

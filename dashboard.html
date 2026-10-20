@@ -363,6 +363,7 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
       </div>
     </section>
     <div class="wrap">
+      <section class="panel widep" id="stuHero" style="display:none"></section>
       <section class="pulse rv" id="statBand"></section>
       <div class="sechead rv" id="subjects">
         <h2>Mirai Track</h2><p>Select a subject for topic-level progress</p>
@@ -843,13 +844,25 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
   function facInitials(n){ return n.split(' ').map(function(w){return w[0];}).filter(function(c){return /[A-Z]/.test(c);}).slice(0,2).join('')||n[0]; }
   document.getElementById('roleChip').textContent = meFac?meFac.name:(isMgr?'Campus Controller':(isFaculty?'Faculty':'Student'));
   document.getElementById('avatarInit').textContent = meFac?facInitials(meFac.name):(isMgr?'C':(isFaculty?'F':'S'));
+  /* student identity: name chosen at login; Sessions is faculty/manager only */
+  (function(){ try{
+    if(role==='student'){
+      var _nsx=document.getElementById('navSessions'); if(_nsx) _nsx.style.display='none';
+      var _sn=localStorage.getItem('mirai_student')||'';
+      if(_sn){
+        var _fmt=_sn.toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();});
+        var _rc=document.getElementById('roleChip'); if(_rc){ _rc.textContent=_fmt; _rc.style.maxWidth='38vw'; _rc.style.overflow='hidden'; _rc.style.textOverflow='ellipsis'; _rc.style.whiteSpace='nowrap'; _rc.title=_fmt; }
+        var _av=document.getElementById('avatarInit'); if(_av) _av.textContent=_fmt.split(' ').map(function(w){return w[0];}).filter(function(c){return /[A-Za-z]/.test(c);}).slice(0,2).join('').toUpperCase()||'S';
+      }
+    }
+  }catch(e){} })();
   document.getElementById('navSubjects').href = 'subjects.html'+qstr;
   document.getElementById('navExams').href = 'exams.html'+qstr;
   document.getElementById('navFaculty').href = 'faculty.html'+qstr;
   document.getElementById('navStudents').href = 'students.html'+qstr;
   document.getElementById('navCalendar').href = 'calendar.html'+qstr;
   var _ns=document.getElementById('navSessions'); if(_ns) _ns.href='saved-sessions.html'+qstr;
-  if(!isFaculty && !isMgr) document.getElementById('navStudents').style.display='none';
+  if(!isFaculty && !isMgr){ document.getElementById('navStudents').style.display='none'; var _nsd=document.getElementById('navSessions'); if(_nsd) _nsd.style.display='none'; }
   var brandHome = document.getElementById('brandHome');
   brandHome.href = 'dashboard.html'+qstr;
   brandHome.addEventListener('click', function(){ try{sessionStorage.removeItem('mirai_intro_seen');}catch(e){} });
@@ -1907,6 +1920,40 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
       '<div class="prow"><span>Overdue topics</span><b>'+odCount+'</b></div>'+
       '</div></div>';
   }
+  function __esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderStuHero(){
+    var hero=document.getElementById('stuHero'); if(!hero) return;
+    var r=''; try{ r=localStorage.getItem('mirai_role')||''; }catch(e){}
+    var nm=''; try{ nm=localStorage.getItem('mirai_student')||''; }catch(e){}
+    if(r!=='student'||!nm){ hero.style.display='none'; return; }
+    var sec=''; try{ sec=localStorage.getItem('mirai_student_sec')||''; }catch(e){}
+    var fmt=nm.toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();});
+    var first=fmt.split(' ')[0];
+    var subs=M.subjects||[];
+    var covs=subs.map(function(s){ var ts=s.topics||[]; if(!ts.length) return 0; return ts.reduce(function(a,t){return a+(+t.pct||0);},0)/ts.length; });
+    var cov=subs.length?Math.round(covs.reduce(function(a,b){return a+b;},0)/subs.length):0;
+    var done=subs.reduce(function(a,s){ return a+(s.topics||[]).filter(function(t){return (+t.pct||0)>=100;}).length; },0);
+    var tot=subs.reduce(function(a,s){ return a+(s.topics||[]).length; },0);
+    var onTr=subs.filter(function(s){return (+s.buffer||0)>=1.15;}).length;
+    var all=((S&&S.logs)||[]).concat(__cloudLogs);
+    var hw=all.filter(function(l){ return (l.hw&&String(l.hw).trim())||(l.hwd&&String(l.hwd).trim()); })
+      .sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }).slice(0,5);
+    var hwHtml=hw.length? hw.map(function(l){
+        var s=subs.filter(function(x){return x.id===l.sub;})[0];
+        var tl=l.tlabel||(s&&s.topics&&s.topics[+l.topic]?s.topics[+l.topic].t:'');
+        return '<div class="prow"><span>'+__esc(s?(s.short||s.name):l.sub)+(tl?' \u00B7 '+__esc(tl):'')+(l.date?' \u00B7 '+__esc(l.date):'')+'</span><b>'+__esc(l.hw||'')+(l.hwd?' \u2014 '+__esc(l.hwd):'')+'</b></div>';
+      }).join('') : '<p class="psub">No homework logged yet \u2014 faculty add it when they log a session.</p>';
+    hero.innerHTML='<div class="pk"><span>YOUR DASHBOARD</span><span class="tag">'+(sec?'Section '+__esc(sec)+' \u00B7 ':'')+'Mirai Track</span></div>'
+      +'<div class="pv" style="margin-bottom:6px">Namaste, '+__esc(first)+'</div>'
+      +'<p class="psub">'+__esc(fmt)+(sec?' \u00B7 Section '+__esc(sec):'')+' \u00B7 B.Tech CSE (AI &amp; ML) \u00B7 Semester 1</p>'
+      +'<div class="pdiv">'
+      +'<div class="prow"><span>Syllabus covered \u2014 your subjects</span><b>'+cov+'%</b></div>'
+      +'<div class="prow"><span>Topics completed</span><b>'+done+' / '+tot+'</b></div>'
+      +'<div class="prow"><span>Subjects on track</span><b>'+onTr+' / '+subs.length+'</b></div>'
+      +'</div>'
+      +'<h4 style="margin:16px 0 6px;font-size:13px;letter-spacing:.08em">RECENT HOMEWORK</h4>'+hwHtml;
+    hero.style.display='block';
+  }
   var __cloudLogs=[];
   function replayLogs(){
     if(!S) return;
@@ -1932,6 +1979,7 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
     try{ renderFacultyFocus(); }catch(e){}
     try{ renderFacultyStats(); }catch(e){}
     try{ renderTimetable(); }catch(e){}
+    try{ renderStuHero(); }catch(e){}
   }
   window.MiraiPatches={run:run};
   if(window.MiraiDB && MiraiDB.fetchLogs){
@@ -2380,7 +2428,7 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
 document.addEventListener('click', function(e){
   var a = e.target.closest('a.logout');
   if(a){
-    try{ localStorage.removeItem('mirai_role'); localStorage.removeItem('mirai_fac'); }catch(err){}
+    try{ localStorage.removeItem('mirai_role'); localStorage.removeItem('mirai_fac'); localStorage.removeItem('mirai_student'); localStorage.removeItem('mirai_student_sec'); }catch(err){}
   }
 });
 </script>

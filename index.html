@@ -382,6 +382,13 @@
             <button type="button" role="tab" aria-selected="false" data-role="Faculty">Faculty</button>
             <button type="button" role="tab" aria-selected="false" data-role="Manager">Manager</button>
           </div>
+          <div class="field" id="stuField">
+            <label for="stuSelect">Select your name</label>
+            <div class="input-shell">
+              <select id="stuSelect" style="width:100%;height:51px;padding:0 15px;background:rgba(255,255,255,.035);border:1px solid rgba(143,177,222,.16);border-radius:10px;color:inherit;font:inherit;outline:none">
+              </select>
+            </div>
+          </div>
           <div class="field" id="facField" style="display:none">
             <label for="facSelect">Select faculty member</label>
             <div class="input-shell">
@@ -417,6 +424,7 @@
     </section>
     <div class="ambient-label" aria-hidden="true">Mirai academic systems / 01</div>
   </main>
+  <script src="students.js"></script>
   <script>
     (function () {
       var stage = document.getElementById('stage');
@@ -424,6 +432,18 @@
       var status = document.getElementById('loginStatus');
       var submit = form.querySelector('.sign-in');
       var roleButtons = form.querySelectorAll('[data-role]');
+      /* student picker: the real first-year roster (students.js) */
+      (function(){
+        var sel = document.getElementById('stuSelect');
+        if (sel && window.REAL_STUDENTS) {
+          REAL_STUDENTS.forEach(function(st){
+            var o = document.createElement('option');
+            o.value = st.n; o.textContent = st.n + ' \u2014 Section ' + st.s;
+            o.setAttribute('data-sec', st.s);
+            sel.appendChild(o);
+          });
+        }
+      })();
       var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       roleButtons.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -432,7 +452,9 @@
           });
           submit.textContent = 'Continue as ' + button.getAttribute('data-role');
           var isFac = button.getAttribute('data-role') === 'Faculty';
+          var isStu = button.getAttribute('data-role') === 'Student';
           document.getElementById('facField').style.display = isFac ? 'block' : 'none';
+          document.getElementById('stuField').style.display = isStu ? 'block' : 'none';
           status.textContent = '';
           status.className = 'status';
         });
@@ -454,11 +476,18 @@
           var fac = document.getElementById('facSelect').value;
           url += '&fac=' + fac;
         }
+        var stuName = '', stuSec = '';
+        if (role === 'student') {
+          var ssel = document.getElementById('stuSelect');
+          if (ssel && ssel.value) { stuName = ssel.value; stuSec = ssel.options[ssel.selectedIndex].getAttribute('data-sec') || ''; }
+        }
         /* persist identity so every app page resolves the same profile */
         try{
           localStorage.setItem('mirai_role', role);
           if (role === 'faculty') localStorage.setItem('mirai_fac', fac);
           else localStorage.removeItem('mirai_fac');
+          if (role === 'student' && stuName) { localStorage.setItem('mirai_student', stuName); localStorage.setItem('mirai_student_sec', stuSec); }
+          else { localStorage.removeItem('mirai_student'); localStorage.removeItem('mirai_student_sec'); }
         }catch(e){}
         status.textContent = 'Signing you in\u2026';
         status.className = 'status ready';
