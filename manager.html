@@ -2102,7 +2102,7 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
   if(va){
     var html='<select id="viewAsSel" style="background:#0a1230;color:#eef2ff;border:1px solid var(--line-strong);border-radius:12px;padding:12px 16px;font:600 13.5px Poppins;cursor:pointer;min-width:260px">'+
       '<option value="">View portal as…</option>'+
-      (M.facultyList||[]).map(function(f){
+      (((typeof MS!=='undefined' && MS.activeCampus && MS.activeCampus()==='hitech') ? (M.facultyList||[]) : [])).map(function(f){
         return '<option value="dashboard.html?role=faculty&fac='+f.id+'">'+esc(f.name)+' — Faculty</option>';
       }).join('')+
       '<option value="dashboard.html?role=student">Student view</option></select>';

@@ -188,11 +188,15 @@ body{zoom:0.8;}
     document.getElementById('brandHome').href='dashboard.html'+q;
     function initials(n){ return n.split(' ').map(function(w){return w[0];}).filter(function(c){return /[A-Z]/.test(c);}).slice(0,2).join('')||n[0]; }
     var grid=document.getElementById('facGrid');
+    if(((typeof resolveCampus==='function')?resolveCampus():'hitech')!=='hitech'){
+      grid.innerHTML='<div class="panel" style="grid-column:1/-1;text-align:center;padding:34px 20px"><p style="font-family:var(--fd);font-weight:700;font-size:19px;margin:0 0 6px">No faculty data for this campus yet</p><p class="sub" style="margin:0">The faculty directory currently holds Hi-Tech campus data only.</p></div>';
+    } else {
     grid.innerHTML=FACULTY.map(function(f){
       var subs=f.subjects.map(function(s){return '<span class="fsub">'+(SUBJECT_NAMES[s]||s)+'</span>';}).join('');
       return '<div class="fcard" data-id="'+f.id+'"><div class="fava">'+initials(f.name)+'</div>'+
         '<p class="fname">'+f.name+'</p><p class="ftitle">'+f.title+'</p><div class="fsubs">'+subs+'</div></div>';
     }).join('');
+    }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function getSetup(){ try{ if(window.MiraiSetup&&MiraiSetup.state) return MiraiSetup.state; if(window.CampusDB){ var s=CampusDB.get(CampusDB.current()); if(s) return s; } return JSON.parse(localStorage.getItem('mirai_setup_v1')||'null'); }catch(e){ return null; } }
     var __cloudHW=[];
@@ -244,7 +248,7 @@ body{zoom:0.8;}
       }).join('') || '<p class="msub" style="margin:0 0 4px">No comments yet.</p>';
       if(meFacId===f.id){
         var S=getSetup(), sts=(S&&S.students)||[];
-        if(!sts.length||typeof sts[0]==='string'||sts.length<100){
+        if(((typeof resolveCampus==='function')?resolveCampus():'hitech')==='hitech' && (!sts.length||typeof sts[0]==='string'||sts.length<100)){
           sts=((typeof REAL_STUDENTS!=='undefined')?REAL_STUDENTS.slice():[]);
           if(S){ S.students=sts; try{ localStorage.setItem('mirai_setup_v1', JSON.stringify(S)); }catch(e){} }
         }

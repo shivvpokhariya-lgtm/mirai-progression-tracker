@@ -83,12 +83,31 @@ function resolveCampus(){
     aft.forEach(function(a){ row('alpha',a[0],a[1],a[2],a[3],a[4]); row('beta',a[0],a[1],a[2],a[3],a[4]); });
     return T;
   }
-  function defaultSetup(campusName){
+  function hiFacNames(){ var s={}; defaultTT().forEach(function(r){ if(r.fac) s[r.fac]=1; }); return s; }
+  function ttFor(id){
+    var T=defaultTT();
+    if(id==='hitech') return T;
+    var hi=hiFacNames();
+    return T.map(function(r){ return {day:r.day, sub:r.sub, fac:(hi[r.fac]?'':r.fac), s:r.s, e:r.e, batch:r.batch}; });
+  }
+  function rosterFor(id){
+    return (id==='hitech' && typeof REAL_STUDENTS!=='undefined') ? REAL_STUDENTS.slice() : [];
+  }
+  function isHiRoster(arr){
+    if(!arr || typeof REAL_STUDENTS==='undefined' || arr.length!==REAL_STUDENTS.length) return false;
+    for(var i=0;i<arr.length;i++){
+      var a=arr[i], b=REAL_STUDENTS[i];
+      if(typeof a==='string'){ if(a!==b.n) return false; }
+      else if(!a || a.n!==b.n || (a.s||'')!==(b.s||'')) return false;
+    }
+    return true;
+  }
+  function defaultSetup(campusName, id){
     return {
       sem:{name:'Odd Semester 2026-27', campus:campusName, start:'2026-08-03', end:'2026-12-18',
         sat:'1st3rd', cap:6, holidays:['2026-10-20','2026-11-08','2026-12-25'],
         events:[{d:'2026-10-12',label:'Tech fest'},{d:'2026-11-24',label:'Mid-Semester Examinations begin'}]},
-      tt:defaultTT(), ttVersion:2,
+      tt:ttFor(id||'hitech'), ttVersion:2,
       exams:[
         {id:'ses1', name:'Sessional 1', date:'2026-09-15', scope:{}},
         {id:'midsem', name:'Mid-Semester Examinations', date:'2026-11-24', scope:{}},
@@ -96,7 +115,7 @@ function resolveCampus(){
         {id:'endsem', name:'End-Term Examinations', date:'2026-12-22', scope:{}}
       ],
       logs:[],
-      students:(typeof REAL_STUDENTS!=='undefined'?REAL_STUDENTS.slice():[])
+      students:rosterFor(id||'hitech')
     };
   }
   var _active = resolveCampus();
@@ -183,13 +202,22 @@ function resolveCampus(){
   function bindCampus(id){
     _active = id;
     S = CampusDB.get(id);
-    if(!S){ S = defaultSetup(campusById(id).name); CampusDB.save(id, S); }
-    if(S.ttVersion!==2){ S.tt = defaultTT(); S.sem.sat='1st3rd'; S.ttVersion = 2; }
+    if(!S){ S = defaultSetup(campusById(id).name, id); CampusDB.save(id, S); }
+    if(S.ttVersion!==2){ S.tt = ttFor(id); S.sem.sat='1st3rd'; S.ttVersion = 2; }
     var dirty=false;
     (S.tt||[]).forEach(function(r){ if(!r.batch){ r.batch='alpha'; dirty=true; } });
-    if(!S.students || !S.students.length || typeof S.students[0]==='string' || S.students.length<100){
-      S.students=(typeof REAL_STUDENTS!=='undefined'?REAL_STUDENTS.slice():[]);
-      dirty=true;
+    if(id==='hitech'){
+      if(!S.students || !S.students.length || typeof S.students[0]==='string' || S.students.length<100){
+        S.students=rosterFor('hitech');
+        dirty=true;
+      }
+    } else {
+      /* students + faculty data is Hi-Tech only: other campuses start empty,
+         and any auto-seeded Hi-Tech roster/timetable names are cleaned out. */
+      if(!Array.isArray(S.students)){ S.students=[]; dirty=true; }
+      else if(isHiRoster(S.students)){ S.students=[]; dirty=true; }
+      var hiF=hiFacNames();
+      (S.tt||[]).forEach(function(r){ if(r.fac && hiF[r.fac]){ r.fac=''; dirty=true; } });
     }
     if(dirty) CampusDB.save(id, S);
     computeDates();

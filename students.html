@@ -211,8 +211,8 @@ body{zoom:0.8;}
     function getFb(){ try{ return JSON.parse(localStorage.getItem('mirai_feedback_v1')||'[]'); }catch(e){ return []; } }
     function allStudents(){
       var S=getSetup();
-      var raw=(S&&S.students&&S.students.length)?S.students:((typeof REAL_STUDENTS!=='undefined')?REAL_STUDENTS:[]);
-      if(!raw.length||typeof raw[0]==='string'||raw.length<100){
+      var raw=(S&&S.students&&S.students.length)?S.students:[];
+      if(((typeof resolveCampus==='function')?resolveCampus():'hitech')==='hitech' && (!raw.length||typeof raw[0]==='string'||raw.length<100)){
         raw=((typeof REAL_STUDENTS!=='undefined')?REAL_STUDENTS.slice():[]);
         if(S){ S.students=raw; try{ localStorage.setItem('mirai_setup_v1', JSON.stringify(S)); }catch(e){} }
       }
@@ -221,7 +221,9 @@ body{zoom:0.8;}
       });
     }
     var STUDENTS = allStudents();
-    $('stuCount').textContent = STUDENTS.length+' students · first-year batch — profiles, homework and feedback in one place.';
+    $('stuCount').textContent = (!STUDENTS.length && ((typeof resolveCampus==='function')?resolveCampus():'hitech')!=='hitech')
+      ? 'No student data for this campus yet.'
+      : STUDENTS.length+' students · first-year batch — profiles, homework and feedback in one place.';
     function fbCount(name){ return getFb().filter(function(f){ return f.student===name; }).length; }
     /* ---- grid ---- */
     var curSec='all', curQ='';
