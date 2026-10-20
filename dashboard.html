@@ -1097,6 +1097,8 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
 </script>
 <!-- Setup engine moved to campus.js (per-campus). The legacy block below is disabled. -->
 <script src="campus.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 <script>
 /* ================= Semester Setup + Planning Engine ================= */
 /* DISABLED: moved to campus.js. Kept for reference; remove in cleanup. */
@@ -1478,11 +1480,18 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
   var saveBtn=$('logSave');
   if(saveBtn) saveBtn.addEventListener('click', function(){
     var sSub=M.subjects.filter(function(x){return x.id===$('logSubject').value;})[0];
-    var tIdx=$('logTopic').selectedIndex;
+    /* the topic/subtopic selects list only incomplete items, so selectedIndex
+       is NOT an array index — resolve by the option's text value instead */
+    var tIdx = sSub ? sSub.topics.findIndex(function(x){return x.t===$('logTopic').value;}) : -1;
+    if(tIdx<0) tIdx=$('logTopic').selectedIndex;
+    var subIdx=-1;
+    if(sSub && tIdx>=0 && $('logSub') && $('logSub').value && sSub.topics[tIdx] && sSub.topics[tIdx].subs){
+      subIdx=sSub.topics[tIdx].subs.findIndex(function(x){return x.t===$('logSub').value;});
+    }
     var entry={
       date:$('logDate').value, sub:$('logSubject').value,
       topic:tIdx, tlabel:(sSub&&sSub.topics[tIdx])?sSub.topics[tIdx].t:'',
-      subtopic:$('logSub')?$('logSub').selectedIndex:-1,
+      subtopic:subIdx,
       status:$('logStatus').value, pct:+$('logPct').value, hours:parseFloat($('logHours').value)||0,
       covered:$('logCovered').value, leftover:$('logLeftover').value,
       carry:$('logCarry').value==='' ? -1 : +$('logCarry').value,
@@ -1898,9 +1907,10 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
       '<div class="prow"><span>Overdue topics</span><b>'+odCount+'</b></div>'+
       '</div></div>';
   }
+  var __cloudLogs=[];
   function replayLogs(){
-    if(!S||!S.logs) return;
-    S.logs.forEach(function(l){
+    if(!S) return;
+    ((S.logs||[]).concat(__cloudLogs)).forEach(function(l){
       var s=M.subjects.filter(function(x){return x.id===l.sub;})[0]; if(!s) return;
       var t=s.topics[+l.topic]; if(!t) return; var v=+l.pct||0;
       if(l.status==='Skipped'){ t.skipped=true; return; }
@@ -1910,8 +1920,11 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
     });
   }
   function run(){
+    var _origLogs = S ? S.logs : null;
+    if(S && __cloudLogs.length) S.logs = (_origLogs||[]).concat(__cloudLogs);
     try{ replayLogs(); }catch(e){}
     try{ MS.computeDates(); MS.computeMetrics(M.subjects); }catch(e){}
+    if(S) S.logs = _origLogs;
     try{ M.renderAll(false); }catch(e){}
     try{ renderAlerts(); }catch(e){}
     try{ renderExamReadiness(); }catch(e){}
@@ -1921,6 +1934,13 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
     try{ renderTimetable(); }catch(e){}
   }
   window.MiraiPatches={run:run};
+  if(window.MiraiDB && MiraiDB.fetchLogs){
+    MiraiDB.fetchLogs().then(function(rows){
+      if(!rows || !rows.length) return;
+      try{ __cloudLogs = MiraiDB.cloudEntries(rows, M.subjects, S ? S.logs : []); }catch(e){ __cloudLogs = []; }
+      if(__cloudLogs.length) run();
+    });
+  }
   setTimeout(run, 100);
   (function(){
     var orig=M.renderAll;
@@ -2038,7 +2058,7 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
         $('logSubject').value=parsed.sub;
         $('logSubject').dispatchEvent(new Event('change'));
         setTimeout(function(){
-          if(parsed.topic>=0) $('logTopic').selectedIndex=parsed.topic;
+          if(parsed.topic>=0){ var _qs=M.subjects.filter(function(x){return x.id===parsed.sub;})[0]; var _qt=_qs&&_qs.topics[parsed.topic]; if(_qt) $('logTopic').value=_qt.t; }
           $('logPct').value=parsed.pct; $('logPctVal').textContent=parsed.pct+'%';
           $('logHours').value=parsed.hours; $('logStatus').value=parsed.status;
           $('logCovered').value=parsed.covered; $('logNotes').value=parsed.notes;

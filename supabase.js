@@ -62,7 +62,53 @@ async function logSessionToDB(e) {
   }
 }
 
+// Read every mirrored session log (anon read policy). Returns null when
+// offline / unavailable so callers can fall back to local-only state.
+async function fetchSessionLogs() {
+  try {
+    const client = getSupabase();
+    if (!client) return null;
+    const { data, error } = await client.from('session_logs')
+      .select('log_date,subject_id,faculty_id,topic_label,status,pct,hours')
+      .order('log_date', { ascending: true });
+    if (error) return null;
+    return data || [];
+  } catch (e) { return null; }
+}
+
+// Normalize cloud rows into local log-entry shape: resolve each row's
+// topic_label back to a topic index inside its subject, and drop rows that
+// are already in the local log store (multiset dedupe on
+// sub|topic|status|pct|date), so a session logged on this device is never
+// applied twice.
+function cloudEntries(rows, subjects, localLogs) {
+  if (!rows || !subjects) return [];
+  const counts = {};
+  (localLogs || []).forEach(function (l) {
+    const k = l.sub + '|' + (+l.topic) + '|' + l.status + '|' + (+l.pct || 0) + '|' + l.date;
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  const out = [];
+  rows.forEach(function (r) {
+    const s = subjects.filter(function (x) { return x.id === r.subject_id; })[0];
+    if (!s || !s.topics) return;
+    let idx = -1;
+    for (let i = 0; i < s.topics.length; i++) { if (s.topics[i].t === r.topic_label) { idx = i; break; } }
+    if (idx < 0) {
+      const want = String(r.topic_label || '').trim().toLowerCase();
+      for (let i = 0; i < s.topics.length; i++) { if (String(s.topics[i].t || '').trim().toLowerCase() === want) { idx = i; break; } }
+    }
+    if (idx < 0) return;
+    const k = r.subject_id + '|' + idx + '|' + r.status + '|' + (+r.pct || 0) + '|' + r.log_date;
+    if (counts[k] > 0) { counts[k]--; return; }
+    out.push({ date: r.log_date, sub: r.subject_id, topic: idx, tlabel: r.topic_label,
+               subtopic: -1, status: r.status, pct: +r.pct || 0, hours: +r.hours || 0,
+               fac: r.faculty_id || '', cloud: true });
+  });
+  return out;
+}
+
 // Export for use in pages
 if (typeof window !== 'undefined') {
-  window.MiraiDB = { getSupabase, testSupabaseConnection, logSession: logSessionToDB, SUPABASE_URL };
+  window.MiraiDB = { getSupabase, testSupabaseConnection, logSession: logSessionToDB, fetchLogs: fetchSessionLogs, cloudEntries, SUPABASE_URL };
 }

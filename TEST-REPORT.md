@@ -169,3 +169,39 @@ switcher element missing (added). Verified by a 30+-check browser QA across
 faculty/manager/student roles and a 390px phone viewport, incl. the
 log → reload durability test (DSA topic 70% → 100%, coverage 51% → 56%,
 persisted). Backup: `Mirai Progression Track BACKUP 2026-10-20`.
+
+
+---
+
+## Addendum — 2026-10-20, post-handover fix pass
+
+Three defects were found by a final audit **after** the tests above were run,
+fixed, and re-verified on the exact shipped files (full UI regression 36/36,
+cloud-wiring probe 10/10, both in a real Chromium):
+
+1. **Supabase client was not loaded on the logging pages.** The dual-write calls
+   existed in `dashboard.html` / `manager.html` but the pages never included
+   the Supabase client, so in the shipped app the mirror silently never ran
+   (the round-trip in TR-07 had verified the database path via direct REST,
+   not from inside the app). The client is now included on Dashboard, Manager,
+   Subjects and Exams, and an automated browser test logs a session through
+   the real UI and captures the exact insert payload (subject, topic label,
+   faculty slug, status, % — all correct).
+2. **Wrong-topic recording.** The log dialog's topic list shows only
+   incomplete topics, but the save handler treated the dropdown position as
+   the topic's array index — picking any topic other than the first-listed one
+   recorded the session against a different (earlier) topic. Fixed by
+   resolving the picked topic by its label; a regression test picks the
+   3rd-listed topic and asserts the recorded entry, the reload replay and the
+   database row all name that exact topic.
+3. **Dashboards did not read the cloud copy.** Progress was computed from the
+   local browser's logs only, so a manager on a fresh machine saw none of the
+   faculty's phone-logged progress. Dashboard / Manager / Subjects / Exams now
+   fetch `session_logs` on load and merge other devices' sessions into the
+   computation (multiset-deduplicated by subject/topic/status/%/date, unknown
+   topic labels ignored, fully offline-tolerant). Verified: with an empty
+   browser profile, cloud rows alone rebuild progress (e.g. a DSA topic
+   70% -> 100%; DSA exam readiness 51% -> 56%).
+
+The single verification row inserted into `session_logs` during TR-07 was
+deleted after verification; the production table starts empty for the team.

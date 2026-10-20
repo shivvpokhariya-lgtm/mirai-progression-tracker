@@ -1,7 +1,7 @@
-/* Mirai Progression Tracker - Service Worker (v2)
+/* Mirai Progression Tracker - Service Worker (v3)
    HTML pages: network-first (patched pages are never served stale).
    Static assets: cache-first. Cross-origin (Supabase, CDNs, fonts) is never intercepted. */
-const CACHE_NAME = 'mirai-tracker-v2';
+const CACHE_NAME = 'mirai-tracker-v3';
 const ASSETS = ['index.html','dashboard.html','manager.html','subjects.html','exams.html','faculty.html','students.html','calendar.html','saved-sessions.html','campus.js','supabase.js','students.js','starfield.js','mobile.css','manifest.json','icon.svg'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });

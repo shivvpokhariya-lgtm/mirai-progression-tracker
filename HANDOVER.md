@@ -36,16 +36,20 @@ Everything is editable inside the app — no code changes needed:
    (Hi-Tech / JUG / Rathinam — switch from the topbar).
 2. The app currently ships with Hi-Tech's real first-year data (8 faculty,
    13 subjects, 119 students in Sections A & B) and demo starting progress —
-   replace or reset it from the same Setup editor. Each browser keeps its own
-   working copy (localStorage); use the CSV export in the dashboard to move
-   logged sessions between machines.
+   replace or reset it from the same Setup editor. Logged sessions sync
+   between machines automatically through Supabase (see Backend); the rest of
+   a campus's working data (setup, plans) is kept per browser in localStorage.
 3. Topics are dated automatically from the timetable; holidays and cancelled
    sessions shift later dates on their own.
 
 ## Backend (optional but wired)
 
 - Every session logged in the app is mirrored to Supabase `session_logs`;
-  **Saved Sessions** reads them back. Reference tables (faculty, subjects,
+  **Saved Sessions** reads them back, and Dashboard / Manager / Subjects /
+  Exams merge the cloud copy into their progress on load (deduplicated
+  against the browser's own logs) — a session logged on a phone shows up in
+  the Campus Controller's numbers on any machine. If Supabase is unreachable,
+  the app simply runs on local data alone. Reference tables (faculty, subjects,
   students) are read-only for the app's public key; only the team can write
   them (SQL Editor / this seed).
 - To rebuild on a fresh Supabase project: run `supabase/schema-v2.sql`, then

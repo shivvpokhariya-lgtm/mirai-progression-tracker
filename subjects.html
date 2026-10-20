@@ -16,6 +16,8 @@
   <title>Subjects · Progression Tracker</title>
   <script src="students.js"></script>
   <script src="campus.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
   <style>
 /* Smooth page transitions */
 
@@ -355,14 +357,15 @@ body{zoom:0.8;}
       detEl.classList.remove('rise'); detEl.style.animation='none'; void detEl.offsetWidth; detEl.style.animation='';
     }
     /* replay persisted session logs onto progress so logged numbers survive reloads */
-    (function(){ try{ var S=(window.MiraiSetup&&MiraiSetup.state)||null; if(!S||!S.logs) return;
-      S.logs.forEach(function(l){ var s=SUBJECTS.filter(function(x){return x.id===l.sub;})[0]; if(!s) return;
+    function applyLogs(list){ (list||[]).forEach(function(l){ var s=SUBJECTS.filter(function(x){return x.id===l.sub;})[0]; if(!s) return;
         var t=s.topics[+l.topic]; if(!t) return; var v=+l.pct||0;
         if(l.status==='Skipped'){ t.skipped=true; return; }
         if(l.status==='Cancelled') return;
         if(t.subs && l.subtopic!=null && +l.subtopic>=0 && t.subs[+l.subtopic]){ var sb=t.subs[+l.subtopic]; sb.pct=Math.max(sb.pct||0,v); t.pct=Math.round(t.subs.reduce(function(a,x){return a+(+x.pct||0);},0)/t.subs.length); }
         else { t.pct=Math.max(t.pct||0,v); if(t.subs) t.subs.forEach(function(x){ x.pct=Math.max(x.pct||0,v); }); }
-      }); }catch(e){} })();
+      }); }
+    try{ var S0=(window.MiraiSetup&&MiraiSetup.state)||null; if(S0&&S0.logs) applyLogs(S0.logs); }catch(e){}
+    if(window.MiraiDB && MiraiDB.fetchLogs){ MiraiDB.fetchLogs().then(function(rows){ if(!rows||!rows.length) return; try{ var Sx=(window.MiraiSetup&&MiraiSetup.state)||null; var ce=MiraiDB.cloudEntries(rows, SUBJECTS, Sx?Sx.logs:[]); if(!ce.length) return; applyLogs(ce); if(window.MiraiSetup) window.MiraiSetup.computeMetrics(SUBJECTS); renderTabs(); renderDetail(); }catch(e){} }); }
     function examReady(s){
       var exs=null; try{ exs=(window.MiraiSetup&&MiraiSetup.state&&MiraiSetup.state.exams)||null; }catch(e){}
       var ex=null;
