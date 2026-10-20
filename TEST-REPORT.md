@@ -210,3 +210,52 @@ cloud-wiring probe 10/10, both in a real Chromium):
 
 The single verification row inserted into `session_logs` during TR-07 was
 deleted after verification; the production table starts empty for the team.
+
+## Final verification — 2026-10-20 (pre-submission)
+
+A complete regression + spec sweep was run against byte-identical copies of
+the shipped files, followed by a live end-to-end test on the production
+deployment.
+
+**Automated suites (mirror of the exact shipped bytes):**
+
+- Full regression — roles, identity, logging, calendar, permissions, manager
+  powers, student flows: **37/37**
+- Cloud wiring — dual-write payload, cloud read-back merge, wrong-topic
+  regression: **10/10**
+- Phone POV — 390px and 360px, all 9 pages, full phone log flow through to
+  the database write: **23/23**
+- Exams faculty-first ordering: **7/7**
+- Student identity — roster-picker login, named topbar on every page,
+  personal dashboard hero, Sessions removed for students: **17/17**
+- Spec sweep — all 8 faculty (the log dialog offers only their own subjects),
+  manager setup (7 tabs, working-Saturday rule, a live CSV holiday import),
+  campus switcher, all 5 session statuses, engine holiday-shift (a holiday on
+  a working day moves that topic's planned date and every later one), student
+  read-only sweep, dashboard load ~0.5s, PWA manifest + service worker:
+  **25/25** (three harness-side delays were traced and fixed during the sweep
+  — two measurement races and the import success `alert()` blocking headless
+  tests; the application behaviour was correct in all three)
+- Empty-campus pass — JUG and Rathinam, where no data has been entered yet:
+  every page renders with zero errors, and a setup change saved under one
+  campus provably does not leak into another campus's state: **4/4**
+
+**Live production verification (the deployed site, a real browser):** the
+student view on the live site no longer shows the Sessions section; signed in
+as faculty (Vishal Rathee), a session was logged through the real dialog; the
+row was confirmed in production `session_logs` via the REST API with every
+field correct (subject, topic label, status, %, covered text, homework and
+its detail), and the Saved Sessions page rendered it back from the database.
+That live check leaves exactly one row in `session_logs`, clearly labelled
+"FINAL LIVE TEST by Nyx — safe to delete", to be removed in the Supabase
+table editor as the final submission step; every other table holds only the
+seed data verified above (8 faculty, 13 subjects, 119 students, 3 campuses).
+
+**Load (fresh run, this sandbox → Supabase ap-southeast-2):** 50 / 100 / 200
+concurrent users, 3,500 requests, **0 errors**; p50 ≈ 295 ms at every level;
+p95 2.2s / 1.6s / 2.8s — the tail is this sandbox's proxy and transcontinental
+path, not the application (see TR-06; re-run from the campus network for the
+binding numbers).
+
+**Still with the team (unchanged):** TR-03 (five faculty phone timing
+trials — needs people, protocol above) and the TR-06 campus-network re-run.
