@@ -4,6 +4,10 @@ Course-progression tracking for the Mirai School of Technology (MSOT) — built 
 
 Faculty log every teaching session in under a minute; the tracker computes planned vs. covered hours, buffer and pace per subject, exam-scope readiness, and early warnings — across all three MSOT campuses (Hi-Tech Ghaziabad, JUG Jaipur, Rathinam Bengaluru).
 
+## ▶ Open the live app
+
+**[shivvpokhariya-lgtm.github.io/mirai-progression-tracker](https://shivvpokhariya-lgtm.github.io/mirai-progression-tracker/)** — the app opens and runs right there in the browser. No install, no setup: pick a role on the first screen (Student / Faculty / Campus Controller) and start.
+
 **Live roles:** Student (read-only) · Faculty (own subjects) · Campus Controller / Manager (full control, all campuses).
 
 ## Features
