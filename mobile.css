@@ -30,6 +30,7 @@
   .sechead { flex-direction: column; align-items: flex-start !important; gap: 6px; }
   .sgrid, .stats, .upnext, .facgrid, .fgrid, .pulse-slide,
   .cards, .grid2, .grid3, .dstats, .xstats, .tgroups, .grid { grid-template-columns: 1fr !important; }
+  .sgrid > *, .scard { min-width: 0 !important; }
   .panel { padding: 20px 16px !important; border-radius: 16px; }
   .panel h3 { font-size: 17px; }
   .sutable, table.data, .dtable { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -67,5 +68,8 @@
   .eyebrow { font-size: 9px !important; letter-spacing: .18em !important; }
   .calgrid, .cgrid { gap: 4px; }
   .day { min-height: 52px !important; font-size: 11px; padding: 4px !important; }
+  .day.dim { display: none; }
+  #campusSwitch { max-width: 118px !important; }
+  #campusSwitch ~ #roleChip { display: none; }
   .psub { font-size: 12px; }
 }

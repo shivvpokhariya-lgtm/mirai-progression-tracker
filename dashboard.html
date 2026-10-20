@@ -931,7 +931,7 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
       '<div class="pdiv"><div class="gauge"><div class="fill" style="width:'+gx(worst.buffer)+'%\"></div>'+
       '<div class="tick" style="left:'+gx(1)+'%\"><em>1.00 danger</em></div>'+
       '<div class="tick" style="left:'+gx(1.15)+'%\"><em>1.15 on track</em></div>'+
-      '<div class="needle" style="left:'+gx(worst.buffer)+'%\"></div></div>'+
+      '<div class="needle" style="left:'+Math.min(100,Math.max(0,gx(worst.buffer)))+'%\"></div></div>'+
       '<div class="gticks"><span>0.80×</span><span>1.30×</span></div></div></div>';
     var cardPace =
       '<div class="pcard violet"><div class="pk"><span>Net pace</span><span class="tag\">'+(net>=0?'Ahead':'Behind')+'</span></div>'+
@@ -1930,8 +1930,10 @@ nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
     var fmt=nm.toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();});
     var first=fmt.split(' ')[0];
     var subs=M.subjects||[];
-    var covs=subs.map(function(s){ var ts=s.topics||[]; if(!ts.length) return 0; return ts.reduce(function(a,t){return a+(+t.pct||0);},0)/ts.length; });
-    var cov=subs.length?Math.round(covs.reduce(function(a,b){return a+b;},0)/subs.length):0;
+    var allT=subs.flatMap(function(s){ return (M.scope?M.scope(s):(s.topics||[])); });
+    var th=allT.reduce(function(a,t){return a+(+t.h||0);},0);
+    var ch=allT.reduce(function(a,t){return a+(+t.h||0)*((+t.pct||0)/100);},0);
+    var cov=th?Math.round(100*ch/th):0;
     var done=subs.reduce(function(a,s){ return a+(s.topics||[]).filter(function(t){return (+t.pct||0)>=100;}).length; },0);
     var tot=subs.reduce(function(a,s){ return a+(s.topics||[]).length; },0);
     var onTr=subs.filter(function(s){return (+s.buffer||0)>=1.15;}).length;
