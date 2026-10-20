@@ -1,47 +1,61 @@
 # Mirai Progression Tracker
 
-Course progression tracker for MSOT (Mirai School of Technology) — Mirai Track + University Track (AKTU 2026-27 scheme) in one dashboard.
+Course-progression tracking for the Mirai School of Technology (MSOT) — built for Student Challenge Problem 1 (Course Progression Tracker).
+
+Faculty log every teaching session in under a minute; the tracker computes planned vs. covered hours, buffer and pace per subject, exam-scope readiness, and early warnings — across all three MSOT campuses (Hi-Tech Ghaziabad, JUG Jaipur, Rathinam Bengaluru).
+
+**Live roles:** Student (read-only) · Faculty (own subjects) · Campus Controller / Manager (full control, all campuses).
+
+## Features
+
+- **Semester setup (per campus):** start/end dates, working-Saturday rule (all / none / 1st & 3rd / 2nd & 4th), holidays & events, exam windows, timetable, CSV import.
+- **Automatic planned dates:** topics are dated from the timetable; holidays, weekends and cancelled sessions shift later dates forward automatically.
+- **Session logging (< 60 s, phone-friendly):** status (Completed / In Progress / Skipped / Merged / Cancelled), % complete, covered / leftover / carry-forward, classwork & homework, notes — pre-filled from the timetable. Quick Log accepts one line (`sub:topic:status:pct`).
+- **Dashboard math (spec formulas, hours-weighted):**
+  - Coverage % = covered hours ÷ in-scope planned hours (Skipped topics excluded)
+  - Buffer = available hours ÷ remaining hours → **≥ 1.15 On Track · 1.00–1.15 Tight · < 1.00 Danger**
+  - Pace = covered − should-be-covered by today; track rollup = worst subject, not the average
+- **Exam readiness:** per upcoming exam, % of in-scope topics covered + hours still needed, from the real exam scope — never hardcoded.
+- **Early warnings:** missed-log reminders (end of day; unlogged after 48 h → Campus Manager notified), overdue topics, danger list.
+- **Students:** read-only view with "Up next" per subject, full roster with section filter and per-student homework/feedback profiles.
+- **Calendar:** month grid with holidays/exams, 60-day upcoming list, Google Calendar links and .ics export.
+- **PWA:** installable, offline-capable shell (service worker), phone layout with bottom navigation.
 
 ## Run it
 
-No build step. Open `index.html` in a browser, or serve the folder:
+It's a static app — no build step.
 
+```bash
+# any static server, e.g.
+python3 -m http.server 8080
+# open http://localhost:8080/index.html
 ```
-python3 -m http.server 8000
-```
 
-then visit http://localhost:8000
+Pick a role on the login screen (demo login — no password is verified in this build), choose a faculty member for the faculty view, and explore. Data you log is stored locally in the browser (localStorage) per campus, so it works fully offline.
 
-Works on GitHub Pages as-is (all relative links, no backend).
+## Backend (Supabase)
 
-## Demo logins
+- Project `mirai-progression-tracker` (Postgres, RLS enabled). The browser uses only the publishable key; writes to reference tables stay closed to the anon role.
+- **Local-first dual-write:** every logged session is saved locally (source of truth for the dashboard engine) and mirrored into `session_logs`; the **Saved Sessions** page reads them back from the database.
+- Setup: run `supabase/schema-v2.sql`, then `supabase/seed-production.sql` (idempotent — 8 faculty, 13 subjects, 119 students, faculty–subject map, and the `session_logs` insert policy).
 
-- **Student** — pick Student, any name/email, continue.
-- **Faculty** — pick Faculty, then choose a faculty member. Each member only controls their own subjects:
-  - Vishal Rathee — Data Structures & Algorithms, Programming Languages
-  - Varun Kumar Sharma — Web Development, AI & Prompt Engineering
-  - Gaurav Singh — Calculus and Linear Algebra, Indian Knowledge System
-  - Aman Srivastava — Fundamentals of Electrical Engineering
-  - Suman Rajput — Physics Laboratory
-  - Dr. Himanshu Kumar — Quantum Physics and Applications
-  - Zakir Husain — Computer Aided Engineering Drawing Lab
+## Testing
 
-## What it does
+See **TEST-REPORT.md** — hand-calculated verification of the dashboard math against the app (2-decimal match), Saturday-rule and holiday-shift calendar tests, logging-UX timing, permission tests per role, and load tests at 50 / 100 / 200 concurrent users.
 
-- Semester setup (term, campus, working Saturdays, holidays, exam windows)
-- Weekly timetable editor → automatic planned dates per topic
-- Per-subject coverage, buffer and pace tracking (10 subjects)
-- Faculty session logging (status, hours, homework, notes) + Quick Log (paste a message, Hinglish parser)
-- Per-exam readiness (Sessional 1, Mid-Sem, PUT, End-Term) with syllabus scope marking
-- Student "Up next", missed-log alerts, AI weekly summary
-- Faculty feedback on students + homework given, visible on faculty profiles
-- CSV exports, exam calendar (.ics / Google Calendar)
+## Structure
 
-## Honest limits
+| File | Purpose |
+| --- | --- |
+| `index.html` | Role login (Student / Faculty / Manager) |
+| `dashboard.html` | Faculty dashboard — subjects, alerts, exam readiness, logging |
+| `manager.html` | Campus Controller portal — setup editor, campus switcher, controller activity |
+| `subjects.html` · `exams.html` | Subject detail + exam-scope readiness |
+| `faculty.html` · `students.html` | Faculty profiles + student directory |
+| `calendar.html` · `saved-sessions.html` | Academic calendar · database-backed session history |
+| `campus.js` | Shared engine — setup state, date planning, metrics (single source of truth) |
+| `students.js` | Real 119-student roster (Sections A & B) |
+| `supabase.js` | Supabase client + session mirror |
+| `starfield.js` · `mobile.css` · `sw.js` · `manifest.json` | Brand background · phone layout · PWA |
 
-- 100% client-side. All data lives in the browser's localStorage (`mirai_setup_v1`, `mirai_feedback_v1`) — no backend, no real multi-user auth. Two people on two devices will not see each other's data.
-- "AI" features (Quick Log parsing, weekly summary) are deterministic rules-based code, not an LLM.
-- Subtopic percentages ship with demo starting data; real distribution comes from faculty session input.
-- Visiting-faculty "Campus Manager notified" is a UI state, not a real notification.
-- Calendar buttons generate files/links; there is no two-way sync.
-- Syllabus labels are short paraphrases of the official AKTU scheme, not the official text.
+Built by Shivansh Singh Pokhariya (MSOT, first year) with Nyx.

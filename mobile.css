@@ -1,0 +1,71 @@
+/* mobile.css — shared responsive layer for the Mirai Progression Tracker.
+   Linked AFTER each page's inline <style> so these rules win at small widths.
+   Breakpoints: 900px (tablet/phone), 640px (phone). */
+
+/* ================= ≤900px: tablet & phone ================= */
+@media (max-width: 900px) {
+  nav.mainnav {
+    display: flex;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    margin: 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    background: rgba(2, 5, 18, .94); backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255, 255, 255, .09);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    justify-content: flex-start; gap: 2px;
+    scrollbar-width: none;
+  }
+  nav.mainnav::-webkit-scrollbar { display: none; }
+  nav.mainnav a {
+    flex: 1 0 auto; text-align: center; white-space: nowrap;
+    font-size: 11px !important; padding: 10px 14px !important;
+  }
+  /* .topbar carries transform:translateZ(0) and backdrop-filter:blur (shared CSS) — both
+     make an ancestor a containing block for fixed descendants, so the bottom nav
+     resolved against the topbar and rendered at the top. Neutralise both at phone widths. */
+  .topbar { transform: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  body { zoom: 1 !important; padding-bottom: 78px; }
+  .wrap { padding: 24px 16px 110px !important; }
+  h1 { font-size: clamp(38px, 11vw, 64px) !important; }
+  .sechead { flex-direction: column; align-items: flex-start !important; gap: 6px; }
+  .sgrid, .stats, .upnext, .facgrid, .fgrid, .pulse-slide,
+  .cards, .grid2, .grid3, .dstats, .xstats, .tgroups, .grid { grid-template-columns: 1fr !important; }
+  .panel { padding: 20px 16px !important; border-radius: 16px; }
+  .panel h3 { font-size: 17px; }
+  .sutable, table.data, .dtable { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sutable th, .sutable td { white-space: nowrap; }
+  .topbar-in { gap: 10px !important; padding: 10px 14px !important; }
+  .brand small { display: none; }
+  .brand img { height: 26px; }
+  #logFab { right: 14px !important; bottom: 92px !important; }
+  #setupFab { right: 14px !important; bottom: 154px !important; }
+  #quickFab { right: 14px !important; bottom: 206px !important; }
+  #fbFab { right: 14px !important; bottom: 258px !important; }
+  .mback { padding: 10px; }
+  .modal { width: 100% !important; max-height: 94vh !important; border-radius: 16px; }
+  .frow { flex-direction: column; align-items: stretch !important; gap: 8px; }
+  .frow label { margin-bottom: 2px; }
+  .sugrid { grid-template-columns: 1fr !important; }
+  #ttPanel > div:last-child > div { flex-direction: column; gap: 4px; }
+  #ttPanel > div:last-child > div > div:first-child { min-width: 0 !important; }
+  .sutabs, .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sutab { white-space: nowrap; flex: 0 0 auto; }
+  .astrip { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important; }
+  input, select, textarea, button { font-size: 16px; }
+  input[type="time"], input[type="date"], input[type="month"] { font-size: 16px; }
+  .subtn, button.subtn { min-height: 40px; }
+}
+
+/* ================= ≤640px: phones ================= */
+@media (max-width: 640px) {
+  .wrap { padding: 18px 12px 100px !important; }
+  .panel { padding: 16px 12px !important; }
+  .faccard { padding: 14px !important; }
+  .uncard { padding: 12px 14px !important; }
+  #logFab, #setupFab, #quickFab, #fbFab { transform: scale(.88); transform-origin: bottom right; }
+  .hero { padding: 30px 0 10px; }
+  .eyebrow { font-size: 9px !important; letter-spacing: .18em !important; }
+  .calgrid, .cgrid { gap: 4px; }
+  .day { min-height: 52px !important; font-size: 11px; padding: 4px !important; }
+  .psub { font-size: 12px; }
+}

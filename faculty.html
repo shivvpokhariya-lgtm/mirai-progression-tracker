@@ -1,7 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>try{if(sessionStorage.getItem('mirai_intro_seen'))document.documentElement.classList.add('no-intro')}catch(e){}</script>
   <meta charset="utf-8" />
+  <meta name="theme-color" content="#00061B">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#020619" />
@@ -13,6 +18,30 @@
   <script src="campus.js"></script>
   <title>Faculty · Progression Tracker</title>
   <style>
+/* Smooth page transitions */
+
+
+.page-transition{position:fixed;inset:0;background:#00061B;z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.page-transition.active{opacity:1;pointer-events:all}
+/* Smooth content reveal */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+.rv.in{opacity:1;transform:none}
+/* Navbar stays stable */
+.topbar{transform:translateZ(0);will-change:auto}
+
+.top-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.rolechip{font-weight:800;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#46DCEA;border:1px solid rgba(70,220,234,.3);background:rgba(70,220,234,.07);padding:6px 12px;border-radius:999px;font-family:'Poppins',sans-serif;white-space:nowrap}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#2654c5,#0b8fa8);font-weight:800;font-size:13px;color:#fff;font-family:'Poppins',sans-serif;flex-shrink:0}
+.logout{color:#8A93A8;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Poppins',sans-serif}
+.logout:hover{color:#fff}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(1,4,20,.85);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08)}
+.topbar-in{max-width:1400px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:28px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0;min-width:120px}
+.brand img{height:28px;width:auto;display:block}
+nav.mainnav{display:flex;gap:4px;margin-left:8px}
+nav.mainnav a{font-family:'Poppins',sans-serif;color:#8A93A8;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;border-radius:8px;white-space:nowrap}
+nav.mainnav a:hover{color:#fff;background:rgba(255,255,255,.06)}
+nav.mainnav a.active{color:#fff;background:rgba(25,76,209,.25)}
     :root{
       --base-deep:#010414; --base:#03071b;
       --ink:#eef6ff; --muted:#92a3bc; --muted-strong:#b8c5d8;
@@ -24,25 +53,22 @@
     }
     *{box-sizing:border-box}
     html,body{margin:0; padding:0}
+body{zoom:0.8;}
     body{background:var(--base-deep); color:var(--ink); font-family:var(--fb);
       -webkit-font-smoothing:antialiased; min-height:100vh}
-    .topbar{position:sticky; top:0; z-index:20; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-      background:rgba(1,4,20,.72); border-bottom:1px solid var(--line);}
-    .topbar-in{padding:14px clamp(20px,4vw,72px); display:flex; align-items:center; gap:28px;}
-    .brand{display:flex; align-items:center; gap:14px; text-decoration:none; color:var(--ink)}
+    
+    
+    
     .brand small{font-weight:800; font-size:10px; letter-spacing:.24em; color:var(--muted); text-transform:uppercase}
     .mainnav{display:flex; gap:4px; margin-left:8px}
     .mainnav a{color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.08em;
       text-transform:uppercase; padding:8px 14px; border-radius:8px}
     .mainnav a:hover{color:var(--ink); background:rgba(255,255,255,.04)}
     .mainnav a.active{color:var(--ink); background:rgba(53,102,210,.16)}
-    .top-right{margin-left:auto; display:flex; align-items:center; gap:12px}
-    .rolechip{font-weight:800; font-size:10px; letter-spacing:.16em; text-transform:uppercase;
-      color:var(--cyan); border:1px solid rgba(70,220,234,.3); background:rgba(70,220,234,.07);
-      padding:6px 12px; border-radius:999px}
-    .avatar{width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
-      background:linear-gradient(135deg,#2654c5,#0b8fa8); font-weight:800; font-size:13px}
-    .logout{color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase}
+    
+    
+    
+    
     .wrap{max-width:1060px; margin:0 auto; padding:60px clamp(20px,4vw,72px) 90px}
     .eyebrow{font-weight:800; font-size:10px; letter-spacing:.24em; color:var(--muted);
       text-transform:uppercase; margin-bottom:16px}
@@ -76,11 +102,15 @@
     .btn{border:1px solid var(--line); background:transparent; color:var(--ink);
       font:600 13px Poppins; padding:11px 22px; border-radius:12px; cursor:pointer}
     .btn.primary{background:linear-gradient(135deg,#2654c5,#0b8fa8); border:0}
-  </style>
+    .frow{display:flex;gap:10px;margin-top:10px}
+    .frow input,.frow select{flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid rgba(143,177,222,.18);border-radius:10px;color:#fff;padding:10px 12px;font:inherit;font-size:13px}
+    .frow select option{color:#0a1428}
+    </style>
+  <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
   <header class="topbar"><div class="topbar-in">
-    <a class="brand" id="brandHome" href="dashboard.html"><small>Mirai · Progression Tracker</small></a>
+    <a class="brand" id="brandHome" href="dashboard.html"><img src="https://admin.miraisot.com/uploads/Logo_67db14a300.svg" alt="Mirai" /></a>
     <nav class="mainnav">
       <a id="navDash" href="dashboard.html">Dashboard</a>
       <a id="navSubjects" href="subjects.html">Subjects</a>
@@ -88,13 +118,13 @@
       <a href="faculty.html" class="active">Faculty</a>
       <a id="navStudents" href="students.html">Students</a>
       <a id="navCalendar" href="calendar.html">Calendar</a>
+        <a id="navSessions" href="saved-sessions.html">Sessions</a>
     </nav>
     <div class="top-right">
-      <span class="rolechip" id="roleChip">Student</span>
-      <span class="avatar" id="avatarInit">S</span>
-      <a class="logout" href="index.html">Log out</a>
-    </div>
-  </div></header>
+        <span class="rolechip" id="roleChip">Student</span>
+        <span class="avatar" id="avatarInit">S</span>
+        <a class="logout" href="index.html">Log out</a>
+      </div></div></header>
   <div class="wrap">
     <div class="eyebrow">Our mentors</div>
     <div class="pagehead">
@@ -124,13 +154,18 @@
   ];
   var SUBJECT_NAMES = {dsa:'Data Structures & Algorithms', pps:'Programming Languages', web:'Web Development', prompt:'AI & Prompt Engineering', maths1:'Calculus and Linear Algebra', iks:'Indian Knowledge System', bee:'Fundamentals of Electrical Engineering', phylab:'Physics Laboratory', phy:'Quantum Physics and Applications', egd:'Computer Aided Engineering Drawing Lab', langlab:'Language Lab', beelab:'Electrical Engineering Lab', pd:'Product Development'};
   (function(){
-    var q = location.search;
-    var role = (new URLSearchParams(q).get('role')||'student').toLowerCase();
+    var _p = new URLSearchParams(location.search);
+    var role = (_p.get('role')||localStorage.getItem('mirai_role')||'student').toLowerCase();
+    try{localStorage.setItem('mirai_role',role);}catch(e){}
     var isFaculty = role==='faculty';
     var isMgr = role==='manager';
-    document.getElementById('roleChip').textContent = isMgr?'Campus Controller':(isFaculty?'Faculty':'Student');
-    document.getElementById('avatarInit').textContent = isMgr?'C':(isFaculty?'F':'S');
-    ['navDash','navSubjects','navExams','navCalendar'].forEach(function(id){
+    var facId = _p.get('fac')||localStorage.getItem('mirai_fac')||'';
+    try{if(facId)localStorage.setItem('mirai_fac',facId);}catch(e){}
+    var meFac = FACULTY.filter(function(f){ return f.id===facId; })[0] || null;
+    var q = '?role='+role+(facId?'&fac='+facId:'');
+    document.getElementById('roleChip').textContent = meFac?meFac.name:(isMgr?'Campus Controller':(isFaculty?'Faculty':'Student'));
+    document.getElementById('avatarInit').textContent = meFac?initials(meFac.name):(isMgr?'C':(isFaculty?'F':'S'));
+    ['navDash','navSubjects','navExams','navCalendar','navSessions'].forEach(function(id){
       var el=document.getElementById(id);
       if(el) el.href = el.getAttribute('href').split('?')[0] + q;
     });
@@ -231,6 +266,17 @@
       if(e.target===this) this.classList.remove('open');
     });
   })();
+</script>
+<script src="starfield.js"></script>
+
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<script>
+document.addEventListener('click', function(e){
+  var a = e.target.closest('a.logout');
+  if(a){
+    try{ localStorage.removeItem('mirai_role'); localStorage.removeItem('mirai_fac'); }catch(err){}
+  }
+});
 </script>
 </body>
 </html>
