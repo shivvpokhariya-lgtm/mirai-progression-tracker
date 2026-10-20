@@ -69,7 +69,7 @@ async function fetchSessionLogs() {
     const client = getSupabase();
     if (!client) return null;
     const { data, error } = await client.from('session_logs')
-      .select('log_date,subject_id,faculty_id,topic_label,status,pct,hours')
+      .select('log_date,subject_id,faculty_id,topic_label,status,pct,hours,homework,homework_detail')
       .order('log_date', { ascending: true });
     if (error) return null;
     return data || [];
@@ -103,7 +103,7 @@ function cloudEntries(rows, subjects, localLogs) {
     if (counts[k] > 0) { counts[k]--; return; }
     out.push({ date: r.log_date, sub: r.subject_id, topic: idx, tlabel: r.topic_label,
                subtopic: -1, status: r.status, pct: +r.pct || 0, hours: +r.hours || 0,
-               fac: r.faculty_id || '', cloud: true });
+               fac: r.faculty_id || '', hw: r.homework || '', hwd: r.homework_detail || '', cloud: true });
   });
   return out;
 }

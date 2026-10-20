@@ -47,7 +47,9 @@ Everything is editable inside the app — no code changes needed:
 - Every session logged in the app is mirrored to Supabase `session_logs`;
   **Saved Sessions** reads them back, and Dashboard / Manager / Subjects /
   Exams merge the cloud copy into their progress on load (deduplicated
-  against the browser's own logs) — a session logged on a phone shows up in
+  against the browser's own logs), and the Students / Faculty profiles merge
+  the same cloud copy into their homework lists — a session logged on a phone
+  shows up in
   the Campus Controller's numbers on any machine. If Supabase is unreachable,
   the app simply runs on local data alone. Reference tables (faculty, subjects,
   students) are read-only for the app's public key; only the team can write

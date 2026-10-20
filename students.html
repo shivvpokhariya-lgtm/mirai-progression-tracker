@@ -16,6 +16,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="students.js"></script>
   <script src="campus.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
   <title>Students · Progression Tracker</title>
   <style>
 /* Smooth page transitions */
@@ -189,6 +191,11 @@ body{zoom:0.8;}
     }
     /* ---- data ---- */
     function getSetup(){ try{ if(window.MiraiSetup&&MiraiSetup.state) return MiraiSetup.state; if(window.CampusDB){ var s=CampusDB.get(CampusDB.current()); if(s) return s; } return JSON.parse(localStorage.getItem('mirai_setup_v1')||'null'); }catch(e){ return null; } }
+    var __cloudHW=[];
+    function allLogs(){ var S=getSetup(); var base=(S&&S.logs)||[]; if(!__cloudHW.length) return base;
+      var seen={}; base.forEach(function(l){ seen[l.sub+'|'+l.tlabel+'|'+l.status+'|'+(+l.pct||0)+'|'+l.date]=1; });
+      return base.concat(__cloudHW.filter(function(e){ return !seen[e.sub+'|'+e.tlabel+'|'+e.status+'|'+e.pct+'|'+e.date]; })); }
+    if(window.MiraiDB && MiraiDB.fetchLogs){ MiraiDB.fetchLogs().then(function(rows){ if(!rows) return; __cloudHW=rows.map(function(r){ return {date:r.log_date, sub:r.subject_id, fac:r.faculty_id||'', tlabel:r.topic_label||'', status:r.status, pct:+r.pct||0, hw:r.homework||'', hwd:r.homework_detail||''}; }); }); }
     function getFb(){ try{ return JSON.parse(localStorage.getItem('mirai_feedback_v1')||'[]'); }catch(e){ return []; } }
     function allStudents(){
       var S=getSetup();
@@ -237,7 +244,7 @@ body{zoom:0.8;}
       $('ppSub').textContent=(st.s?('Section '+st.s+' · '):'')+'First year · 2026-27';
       var html='';
       /* homework */
-      var S=getSetup(), logs=(S&&S.logs)||[];
+      var logs=allLogs();
       var hw=logs.filter(function(l){ return l.hw==='Assigned'||(l.hwd&&l.hwd.trim()); })
         .sort(function(x,y){ return (y.date||'').localeCompare(x.date||''); }).slice(0,6);
       html+='<div class="eyebrow" style="margin:22px 0 8px">Homework given</div>';

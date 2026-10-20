@@ -16,6 +16,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="students.js"></script>
   <script src="campus.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
   <title>Faculty · Progression Tracker</title>
   <style>
 /* Smooth page transitions */
@@ -181,12 +183,16 @@ body{zoom:0.8;}
     }).join('');
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function getSetup(){ try{ if(window.MiraiSetup&&MiraiSetup.state) return MiraiSetup.state; if(window.CampusDB){ var s=CampusDB.get(CampusDB.current()); if(s) return s; } return JSON.parse(localStorage.getItem('mirai_setup_v1')||'null'); }catch(e){ return null; } }
+    var __cloudHW=[];
+    function allLogs(){ var S=getSetup(); var base=(S&&S.logs)||[]; if(!__cloudHW.length) return base;
+      var seen={}; base.forEach(function(l){ seen[l.sub+'|'+l.tlabel+'|'+l.status+'|'+(+l.pct||0)+'|'+l.date]=1; });
+      return base.concat(__cloudHW.filter(function(e){ return !seen[e.sub+'|'+e.tlabel+'|'+e.status+'|'+e.pct+'|'+e.date]; })); }
+    if(window.MiraiDB && MiraiDB.fetchLogs){ MiraiDB.fetchLogs().then(function(rows){ if(!rows) return; __cloudHW=rows.map(function(r){ return {date:r.log_date, sub:r.subject_id, fac:r.faculty_id||'', tlabel:r.topic_label||'', status:r.status, pct:+r.pct||0, hw:r.homework||'', hwd:r.homework_detail||''}; }); }); }
     function getFb(){ try{ return JSON.parse(localStorage.getItem('mirai_feedback_v1')||'[]'); }catch(e){ return []; } }
     function $id(id){ return document.getElementById(id); }
     var meFacId = new URLSearchParams(q).get('fac')||'';
     function homeworkFor(f){
-      var S=getSetup(); if(!S||!S.logs) return [];
-      return S.logs.filter(function(l){
+      return allLogs().filter(function(l){
         var mine = l.fac ? (l.fac===f.id) : (f.subjects.indexOf(l.sub)>=0);
         return mine && (l.hw==='Assigned' || (l.hwd&&l.hwd.trim()));
       }).sort(function(a,b){ return (b.date||'').localeCompare(a.date||'')||((b.ts||0)-(a.ts||0)); }).slice(0,8);

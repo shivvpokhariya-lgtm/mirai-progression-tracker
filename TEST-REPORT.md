@@ -199,7 +199,12 @@ cloud-wiring probe 10/10, both in a real Chromium):
    faculty's phone-logged progress. Dashboard / Manager / Subjects / Exams now
    fetch `session_logs` on load and merge other devices' sessions into the
    computation (multiset-deduplicated by subject/topic/status/%/date, unknown
-   topic labels ignored, fully offline-tolerant). Verified: with an empty
+   topic labels ignored, fully offline-tolerant). The Students and Faculty
+   profile views merge the same cloud copy into their homework lists
+   (verified by browser test: homework logged on one device appears in
+   profiles opened on another). A phone-size pass (390px and 360px
+   viewports, all 9 pages, plus the complete phone log flow through to the
+   database write) passes 23/23. Verified: with an empty
    browser profile, cloud rows alone rebuild progress (e.g. a DSA topic
    70% -> 100%; DSA exam readiness 51% -> 56%).
 
