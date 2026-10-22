@@ -1,6 +1,6 @@
-# Mirai Progression Tracker
+# Mirai Progression Tracker . ( Team Prometheus)
 
-Course-progression tracking for the Mirai School of Technology (MSOT) — built for Student Challenge Problem 1 (Course Progression Tracker).
+Course-progression tracking for the Mirai School of Technology (MSOT) — built for Student Challenge Problem 1 (Course Progression Tracker) by Shivansh Singh and Saksham Chauhan . .
 
 Faculty log every teaching session in under a minute; the tracker computes planned vs. covered hours, buffer and pace per subject, exam-scope readiness, and early warnings — across all three MSOT campuses (Hi-Tech Ghaziabad, JUG Jaipur, Rathinam Bengaluru).
 
