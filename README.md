@@ -63,4 +63,4 @@ See **TEST-REPORT.md** — hand-calculated verification of the dashboard math ag
 | `supabase.js` | Supabase client + session mirror |
 | `starfield.js` · `mobile.css` · `sw.js` · `manifest.json` | Brand background · phone layout · PWA |
 
-Built by Shivansh Singh Pokhariya (MSOT, first year) with Nyx.
+Built by Shivansh Singh Pokhariya and Saksham Chauhan (MSOT, first year) .
